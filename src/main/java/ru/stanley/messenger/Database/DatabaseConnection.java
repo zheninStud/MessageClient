@@ -20,13 +20,59 @@ public class DatabaseConnection {
     public DatabaseConnection() throws SQLException {
 
         checkPath();
-        connection = DriverManager.getConnection("jdbc:sqlite:" + pathDb);
+       // connection = DriverManager.getConnection("jdbc:sqlite:" + pathDb);
+        connection = DriverManager.getConnection("jdbc:sqlite:mydatabase.db");
         System.out.println("Соединение с локальной базой данных установлено.");
 
         executeStatement(SQLQuery.CREATE_TABLE_USER);
         executeStatement(SQLQuery.CREATE_TABLE_CHAT);
         executeStatement(SQLQuery.CREATE_TABLE_MESSAGE);
         executeStatement(SQLQuery.CREATE_TABLE_CHAT_USER);
+
+
+        executeStatement(SQLQuery.INSERT_USER, "Stanley000", "test@mail.ru", "89178060015");
+        executeStatement(SQLQuery.INSERT_USER, "Pkro", "test2@mail.ru", "89178070042");
+        executeStatement(SQLQuery.INSERT_USER, "Staftoj", "test3@mail.ru", "89178010043");
+
+        executeStatement(SQLQuery.INSERT_CHAT, "Test chat", "2024-04-10");
+        executeStatement(SQLQuery.INSERT_USER_ADD_CHAT, 1, 1);
+        executeStatement(SQLQuery.INSERT_USER_ADD_CHAT, 1, 2);
+
+        executeStatement(SQLQuery.INSERT_MESSAGE, 1, 1, "Hello, everyone!", "2024-04-10");
+        executeStatement(SQLQuery.INSERT_MESSAGE, 1, 2, "Hello!", "2024-04-10");
+        executeStatement(SQLQuery.INSERT_MESSAGE, 1, 1, "How are you?", "2024-04-10");
+        executeStatement(SQLQuery.INSERT_MESSAGE, 1, 2, "I fine!", "2024-04-10");
+
+
+        ResultSet var1 = executeResultStatement(SQLQuery.SELECT_CHAT, 1);
+
+        if (var1.next()) {
+            System.out.println("Result SELECT_CHAT: \nChatId: " + var1.getInt("chatId") + "\nChatName: " + var1.getString("chatName")
+            + "\nDate: " + var1.getString("creationDate"));
+
+            ResultSet var2 = executeResultStatement(SQLQuery.SELECT_CHAT_USERS, var1.getInt("chatId"));
+
+            while (var2.next()) {
+                System.out.println("Result SELECT_CHAT_USERS: \nUserId: " + var2.getInt("userId") + "\nUserName: " + var2.getString("userName")
+                + "\nEmail: " + var2.getString("email") + "\nPhone: " + var2.getString("phone"));
+            }
+
+            ResultSet var3 = executeResultStatement(SQLQuery.SELECT_CHAT_MESSAGES, var1.getInt("chatId"));
+
+            while (var3.next()) {
+                System.out.println("Result SELECT_CHAT_MESSAGES: \nMessageId: " + var3.getInt("messageId") + "\nChatId: " + var3.getInt("chatId")
+                        + "\nSenderId: " + var3.getInt("senderId") + "\nContent: " + var3.getString("content") + "\nTimestamp: " + var3.getString("timestamp"));
+            }
+        }
+
+
+//
+//        ResultSet var1 = executeResultStatement(SQLQuery.SELECT_ALL_USER);
+//
+//        while (var1.next()) {
+//            System.out.println("Result: \nUserId: " + var1.getInt("userId") + "\nUserName: " + var1.getString("userName")
+//            + "\nEmail: " + var1.getString("email") + "\nPhone: " + var1.getString("phone"));
+//        }
     }
 
     public void disconnect() throws SQLException {
@@ -34,12 +80,13 @@ public class DatabaseConnection {
     }
 
     private void checkPath() {
-        URL resourceUrl = application.getClass().getResource("database/mydatabase.db");
+        URL resourceUrl = application.getClass().getResource("databases/mydatabase.db");
 
         if (resourceUrl != null) {
             pathDb = resourceUrl.getPath();
+            System.out.println("Resource: " + pathDb);
         } else {
-            System.out.println("Ресурс базы данных не найден.");
+            System.out.println("Resource not found");
         }
     }
 
