@@ -1,14 +1,16 @@
 package ru.stanley.messenger.Handler;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
+import ru.stanley.messenger.Models.Message;
+
+import javax.net.ssl.*;
+import java.io.*;
+import java.security.*;
+import java.security.cert.CertificateException;
+
 
 public class ClientConnectionHandler {
 
-    private Socket socket;
+    private SSLSocket socket;
     private PrintWriter out;
     private BufferedReader in;
     private Thread receiveThread;
@@ -16,7 +18,12 @@ public class ClientConnectionHandler {
 
     public void connect(String serverAddress, int port) {
         try {
-            socket = new Socket(serverAddress, port);
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, null, null);
+
+            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+            socket = (SSLSocket) sslSocketFactory.createSocket(serverAddress, port);
+
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             System.out.println("Connected to the server");
@@ -24,7 +31,7 @@ public class ClientConnectionHandler {
             running = true;
             receiveThread = new Thread(this::receiveMessages);
             receiveThread.start();
-        } catch (IOException e) {
+        } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
         }
     }
@@ -42,17 +49,21 @@ public class ClientConnectionHandler {
         }
     }
 
-    public void sendMessage(String message) {
-        out.println(message);
+    // Метод для отправки объекта Message
+    public void sendMessage(Message message) {
+        out.println(message.toJSON());
     }
 
+    // Метод для приема сообщений от сервера
     public void receiveMessages() {
         try {
             String serverResponse;
             while (running && (serverResponse = in.readLine()) != null) {
                 System.out.println("Received message from server: " + serverResponse);
 
-                // Дополнительная обработка
+                Message message = Message.fromJSON(serverResponse);
+
+                handleMessage(message);
             }
         } catch (IOException e) {
             if (running) {
@@ -61,6 +72,25 @@ public class ClientConnectionHandler {
         }
     }
 
+    // Метод для обработки сообщений от сервера
+    private void handleMessage(Message message) {
+        String messageType = message.getType();
 
+        switch (messageType) {
+            case "AUTH_SUCCESS":
+                // Обработка успешной авторизации
+                break;
+            case "AUTH_FAIL":
+                // Обработка неудачной авторизации
+                break;
+            case "REGISTER_SUCCESS":
+
+                break;
+            case "REGISTER_FAIL":
+
+                break;
+
+        }
+    }
 }
 

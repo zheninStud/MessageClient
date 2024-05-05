@@ -7,10 +7,10 @@ public class Chat {
     private String chatId;
     private String chatName;
     private List<User> participants;
-    private List<Message> messagesHistory;
+    private List<UserMessage> messagesHistory;
     private Date creationDate;
 
-    public Chat(String chatId, String chatName, List<User> participants, List<Message> messagesHistory, Date creationDate) {
+    public Chat(String chatId, String chatName, List<User> participants, List<UserMessage> messagesHistory, Date creationDate) {
         this.chatId = chatId;
         this.chatName = chatName;
         this.participants = participants;
@@ -42,11 +42,11 @@ public class Chat {
         this.participants = participants;
     }
 
-    public List<Message> getMessagesHistory() {
+    public List<UserMessage> getMessagesHistory() {
         return messagesHistory;
     }
 
-    public void setMessagesHistory(List<Message> messagesHistory) {
+    public void setMessagesHistory(List<UserMessage> messagesHistory) {
         this.messagesHistory = messagesHistory;
     }
 

@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
+import ru.stanley.messenger.Models.Message;
 
 
 public class MainController {
@@ -82,7 +83,7 @@ public class MainController {
         }
 
         messageHistory.getChildren().add(messageBox);
-        clientConnectionHandler.sendMessage(text);
+        clientConnectionHandler.sendMessage(Message.fromJSON(text));
     }
 
     private HBox gethBox(String sender, String text) {

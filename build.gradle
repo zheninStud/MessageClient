@@ -44,6 +44,7 @@ dependencies {
   implementation 'org.xerial:sqlite-jdbc:3.44.1.0'
   implementation 'org.openjfx:javafx-controls:17.0.6'
   implementation 'org.openjfx:javafx-fxml:17.0.6'
+  implementation 'org.json:json:20231013'
 }
 
 test {

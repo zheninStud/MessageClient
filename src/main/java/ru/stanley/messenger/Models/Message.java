@@ -1,49 +1,37 @@
 package ru.stanley.messenger.Models;
 
-import java.util.Date;
+import org.json.JSONObject;
 
 public class Message {
-    private String messageId;
-    private User sender;
-    private String content;
-    private Date timestamp;
 
-    public Message(String messageId, User sender, String content, Date timestamp) {
-        this.messageId = messageId;
-        this.sender = sender;
-        this.content = content;
-        this.timestamp = timestamp;
+    private String type;
+    private JSONObject data;
+
+    public Message(String type, JSONObject data) {
+        this.type = type;
+        this.data = data;
     }
 
-    public String getMessageId() {
-        return messageId;
+    public String getType() {
+        return type;
     }
 
-    public void setMessageId(String messageId) {
-        this.messageId = messageId;
+    public JSONObject getData() {
+        return data;
     }
 
-    public User getSender() {
-        return sender;
+    public static Message fromJSON(String jsonStr) {
+        JSONObject jsonObj = new JSONObject(jsonStr);
+        String type = jsonObj.getString("type");
+        JSONObject data = jsonObj.getJSONObject("data");
+        return new Message(type, data);
     }
 
-    public void setSender(User sender) {
-        this.sender = sender;
+    public String toJSON() {
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("type", type);
+        jsonObj.put("data", data);
+        return jsonObj.toString();
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
 }

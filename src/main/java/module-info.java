@@ -3,6 +3,7 @@ module ru.stanley.messenger {
     requires javafx.fxml;
     requires java.sql;
     requires java.sql.rowset;
+    requires org.json;
 
 
     opens ru.stanley.messenger to javafx.fxml;
