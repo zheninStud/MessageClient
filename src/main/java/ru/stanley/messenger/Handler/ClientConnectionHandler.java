@@ -19,7 +19,13 @@ public class ClientConnectionHandler {
     public void connect(String serverAddress, int port) {
         try {
             SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, null, null);
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+            char[] password = "testserver".toCharArray();
+            keyStore.load(new FileInputStream("server_keystore.jks"), password);
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(keyStore);
+
+            sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
 
             SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
             socket = (SSLSocket) sslSocketFactory.createSocket(serverAddress, port);
@@ -31,7 +37,7 @@ public class ClientConnectionHandler {
             running = true;
             receiveThread = new Thread(this::receiveMessages);
             receiveThread.start();
-        } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
+        } catch (IOException | NoSuchAlgorithmException | KeyManagementException | KeyStoreException | CertificateException   e) {
             e.printStackTrace();
         }
     }
