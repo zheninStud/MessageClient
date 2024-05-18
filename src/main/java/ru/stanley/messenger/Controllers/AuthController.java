@@ -1,22 +1,26 @@
 package ru.stanley.messenger.Controllers;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import ru.stanley.messenger.Database.DatabaseConnection;
+import org.json.JSONObject;
+import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
+import ru.stanley.messenger.Models.User;
+import ru.stanley.messenger.Utils.GOSTHashing;
+import ru.stanley.messenger.Utils.MessageType;
 import ru.stanley.messenger.Utils.WindowsOpener;
 
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+
 
 public class AuthController {
 
-    private static final Messenger application = Messenger.getInstance();
+    private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
 
     @FXML
     private Button buttonAuth;
@@ -32,42 +36,48 @@ public class AuthController {
 
     @FXML
     void initialize() {
+
         buttonAuth.setOnAction(actionEvent ->
         {
-            if (fieldLogin.getText().equals("test")) {
-                Messenger.setAccountName("test");
-                application.openDatabaseConnection();
-                WindowsOpener.openAndCloseWindows("main.fxml", (Stage) buttonAuth.getScene().getWindow());
-            } else if (fieldLogin.getText().equals("test2")) {
-                Messenger.setAccountName("test2");
-                WindowsOpener.openAndCloseWindows("main.fxml", (Stage) buttonAuth.getScene().getWindow());
-            }
+            GOSTHashing.requestGenerateSalt(fieldLogin.getText());
         });
+
         buttonRegister.setOnAction(actionEvent -> WindowsOpener.openAndCloseWindows("registry.fxml", (Stage) buttonRegister.getScene().getWindow()));
     }
 
-    public static boolean verifyPassword(String enteredPassword, String storedHash) {
-        try {
-            // Разделение хранимой строки на соль и хеш
-            String[] parts = storedHash.split(":");
-            String salt = parts[0];
-            String storedHexHash = parts[1];
-
-            // Создание экземпляра MessageDigest с алгоритмом SHA-256
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-
-            // Обновление хеша с использованием соли и введенного пароля
-            md.update(salt.getBytes(StandardCharsets.UTF_8));
-            byte[] enteredHash = md.digest(enteredPassword.getBytes(StandardCharsets.UTF_8));
-
-            // Конвертируем байтовый хеш в строку в формате HEX
-            String enteredHexHash = new BigInteger(1, enteredHash).toString(16);
-
-            // Сравнение хешей
-            return storedHexHash.equals(enteredHexHash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error while hashing password", e);
-        }
+    public String hashPassword(String password, String saltString) {
+        byte[] convertedByteSalt = Base64.getDecoder().decode(saltString);;
+        byte[] hashedPassword = GOSTHashing.computeHashWithSalt(password, convertedByteSalt);
+        return GOSTHashing.encodeSaltAndHash(convertedByteSalt, hashedPassword);
     }
 
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void authMessage(String salt) {
+        String passwordHash = hashPassword(fieldPassword.getText(), salt);
+
+        MessageType messageType = MessageType.AUTH;
+        JSONObject jsonMessage = messageType.createJsonObject();
+
+        jsonMessage.getJSONObject("data").put("username", fieldLogin.getText());
+        jsonMessage.getJSONObject("data").put("passwordHash", passwordHash);
+
+        clientConnectionHandler.sendMessage(messageType.createMessage(jsonMessage));
+    }
+
+    public void openMainForm(User user) {
+        Messenger.setAccountUser(user);
+        WindowsOpener.openAndCloseWindows("main.fxml", (Stage) buttonAuth.getScene().getWindow());
+    }
+
+    public void clearText() {
+        showAlert("Incorrect login or password");
+        fieldPassword.clear();
+    }
 }

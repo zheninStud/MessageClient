@@ -11,6 +11,7 @@ import javafx.scene.text.Text;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Message;
+import ru.stanley.messenger.Models.User;
 
 
 public class MainController {
@@ -33,7 +34,7 @@ public class MainController {
     @FXML
     private Button buttonSend;
 
-    private static final String currentUser = Messenger.getAccountName();
+    private static final User currentUser = Messenger.getAccountUser();
     private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
 
     @FXML
@@ -62,10 +63,10 @@ public class MainController {
     }
 
 
-    private void sendMessage(String sender, String text) {
+    private void sendMessage(User currentUser, String text) {
         if (!text.isEmpty()) {
 //            String sender = currentUser;
-            addMessage(sender, text);
+            addMessage(currentUser.getUserName(), text);
         }
     }
 
@@ -76,7 +77,7 @@ public class MainController {
 
         messageBox.getChildren().add(messageContent);
 
-        if (sender.equals(currentUser)) {
+        if (sender.equals(currentUser.getUserName())) {
             messageBox.setAlignment(Pos.CENTER_RIGHT);
         } else {
             messageBox.setAlignment(Pos.CENTER_LEFT);
@@ -96,7 +97,7 @@ public class MainController {
         messageContent.setAlignment(Pos.TOP_LEFT);
         messageContent.setPadding(new Insets(5));
         messageContent.setMaxWidth(200);
-        messageContent.setBackground(new Background(new BackgroundFill(sender.equals(currentUser) ? Color.LIGHTBLUE : Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+        messageContent.setBackground(new Background(new BackgroundFill(sender.equals(currentUser.getUserName()) ? Color.LIGHTBLUE : Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
 
         return messageContent;
     }

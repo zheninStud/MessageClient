@@ -41,10 +41,11 @@ tasks.jar {
 dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-  implementation 'org.xerial:sqlite-jdbc:3.44.1.0'
-  implementation 'org.openjfx:javafx-controls:17.0.6'
-  implementation 'org.openjfx:javafx-fxml:17.0.6'
-  implementation 'org.json:json:20231013'
+  implementation('org.xerial:sqlite-jdbc:3.44.1.0')
+  implementation('org.openjfx:javafx-controls:17.0.6')
+  implementation ('org.openjfx:javafx-fxml:17.0.6')
+  implementation('org.json:json:20231013')
+  implementation('org.bouncycastle:bcprov-jdk18on:1.78.1')
 }
 
 test {

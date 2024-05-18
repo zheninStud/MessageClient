@@ -2,22 +2,28 @@ package ru.stanley.messenger;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import ru.stanley.messenger.Controllers.AuthController;
+import ru.stanley.messenger.Controllers.MainController;
+import ru.stanley.messenger.Controllers.RegistryController;
 import ru.stanley.messenger.Database.DatabaseConnection;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
+import ru.stanley.messenger.Models.User;
 import ru.stanley.messenger.Utils.FontLoader;
 import ru.stanley.messenger.Utils.WindowsOpener;
 
+import java.security.Security;
 import java.sql.SQLException;
 
 public class Messenger extends Application {
 
-    private static String accountName;
+    private static User accountUser;
     private static Messenger instance;
     private static final ClientConnectionHandler clientConnectionHandler = new ClientConnectionHandler();
     private static DatabaseConnection databaseConnection;
 
     @Override
     public void start(Stage stage) {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         instance = this;
 
         FontLoader.loadFonts();
@@ -48,8 +54,8 @@ public class Messenger extends Application {
     public static Messenger getInstance() {
         return instance;
     }
-    public static String getAccountName() { return accountName; }
-    public static void setAccountName(String name) { accountName = name; }
+    public static User getAccountUser() { return accountUser; }
+    public static void setAccountUser(User user) { accountUser = user; }
     public static ClientConnectionHandler getClientConnectionHandler() {
         return clientConnectionHandler;
     }

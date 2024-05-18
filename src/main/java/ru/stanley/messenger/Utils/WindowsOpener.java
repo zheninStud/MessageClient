@@ -23,6 +23,9 @@ public class WindowsOpener {
             e.printStackTrace();
         }
 
+        Object controller = loader.getController();
+        registerController(controller);
+
         secondStage.setTitle("CryptoMessenger");
         secondStage.setResizable(false);
         secondStage.show();
@@ -39,6 +42,9 @@ public class WindowsOpener {
             e.printStackTrace();
         }
 
+        Object controller = loader.getController();
+        registerController(controller);
+
         stage.close();
 
         secondStage.setTitle("CryptoMessenger");
@@ -48,6 +54,12 @@ public class WindowsOpener {
 
     public static void closeWindow(Stage stage) {
         stage.close();
+    }
+
+    private static void registerController(Object controller) {
+        if (controller != null) {
+            ControllerRegistry.registerController(controller.getClass().getSimpleName(), controller);
+        }
     }
 
 }

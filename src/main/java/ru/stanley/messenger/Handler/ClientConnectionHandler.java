@@ -1,6 +1,12 @@
 package ru.stanley.messenger.Handler;
 
+import javafx.application.Platform;
+import ru.stanley.messenger.Controllers.AuthController;
+import ru.stanley.messenger.Controllers.RegistryController;
 import ru.stanley.messenger.Models.Message;
+import ru.stanley.messenger.Models.User;
+import ru.stanley.messenger.Utils.ControllerRegistry;
+import ru.stanley.messenger.Utils.WindowsOpener;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -15,6 +21,8 @@ public class ClientConnectionHandler {
     private BufferedReader in;
     private Thread receiveThread;
     private boolean running;
+    private AuthController authController;
+    private RegistryController registryController;
 
     public void connect(String serverAddress, int port) {
         try {
@@ -55,12 +63,10 @@ public class ClientConnectionHandler {
         }
     }
 
-    // Метод для отправки объекта Message
     public void sendMessage(Message message) {
         out.println(message.toJSON());
     }
 
-    // Метод для приема сообщений от сервера
     public void receiveMessages() {
         try {
             String serverResponse;
@@ -84,17 +90,39 @@ public class ClientConnectionHandler {
 
         switch (messageType) {
             case "AUTH_SUCCESS":
-                // Обработка успешной авторизации
+                User currentUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
+                        message.getData().getString("email"), message.getData().getString("phone"));
+
+                authController = (AuthController) ControllerRegistry.getController("AuthController");
+                if (authController != null) {
+                    Platform.runLater(() -> authController.openMainForm(currentUser));
+                }
                 break;
             case "AUTH_FAIL":
-                // Обработка неудачной авторизации
+                authController = (AuthController) ControllerRegistry.getController("AuthController");
+                if (authController != null) {
+                    Platform.runLater(() -> authController.clearText());
+                }
                 break;
             case "REGISTER_SUCCESS":
-
+                registryController = (RegistryController) ControllerRegistry.getController("RegistryController");
+                if (registryController != null) {
+                    Platform.runLater(() -> registryController.openAuthForm());
+                }
                 break;
             case "REGISTER_FAIL":
-
+                registryController = (RegistryController) ControllerRegistry.getController("RegistryController");
+                if (registryController != null) {
+                    Platform.runLater(() -> registryController.checkAlert(message.getData().getString("alert")));
+                }
                 break;
+            case "SET_SALT":
+                String salt = message.getData().getString("salt");
+                authController = (AuthController) ControllerRegistry.getController("AuthController");
+                if (authController != null) {
+                    Platform.runLater(() -> authController.authMessage(salt));
+                }
+
 
         }
     }
