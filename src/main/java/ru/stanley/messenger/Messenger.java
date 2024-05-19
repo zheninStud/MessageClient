@@ -2,9 +2,6 @@ package ru.stanley.messenger;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-import ru.stanley.messenger.Controllers.AuthController;
-import ru.stanley.messenger.Controllers.MainController;
-import ru.stanley.messenger.Controllers.RegistryController;
 import ru.stanley.messenger.Database.DatabaseConnection;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Models.User;

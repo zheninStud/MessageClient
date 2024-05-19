@@ -4,7 +4,8 @@ public enum SQLQuery {
 
     CREATE_TABLE_USER(
             "CREATE TABLE IF NOT EXISTS User (" +
-                    "userId INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "userId INTEGER PRIMARY KEY," +
                     "userName TEXT," +
                     "email TEXT," +
                     "phone TEXT" +
@@ -27,7 +28,7 @@ public enum SQLQuery {
                     "content TEXT," +
                     "timestamp DATE," +
                     "FOREIGN KEY (chatId) REFERENCES Chat(chatId)," +
-                    "FOREIGN KEY (senderId) REFERENCES User(userId)" +
+                    "FOREIGN KEY (senderId) REFERENCES User(id)" +
                     ")"
     ),
 
@@ -35,14 +36,23 @@ public enum SQLQuery {
             "CREATE TABLE IF NOT EXISTS ChatUser (" +
                     "chatId INTEGER," +
                     "userId INTEGER," +
-                    "FOREIGN KEY (chatId) REFERENCES Chat(chatId)," +
+                    "FOREIGN KEY (chatId) REFERENCES Chat(id)," +
                     "FOREIGN KEY (userId) REFERENCES User(userId)," +
                     "PRIMARY KEY (chatId, userId)" +
                     ")"
     ),
 
+    CREATE_TABLE_USERKEY(
+            "CREATE TABLE IF NOT EXISTS UserKeys (" +
+                    "userId INTEGER PRIMARY KEY," +
+                    "privateKey BLOB NOT NULL," +
+                    "publicKey BLOB NOT NULL," +
+                    "FOREIGN KEY (UserId) REFERENCES User(id)" +
+                    ")"
+    ),
+
     INSERT_USER(
-            "INSERT INTO 'User' (userName, email, phone) VALUES (?, ?, ?)"
+            "INSERT INTO 'User' (userId, userName, email, phone) VALUES (?, ?, ?, ?)"
     ),
 
     INSERT_CHAT(
@@ -55,6 +65,10 @@ public enum SQLQuery {
 
     INSERT_USER_ADD_CHAT(
             "INSERT INTO 'ChatUser' (chatId, userId) VALUES (?, ?)"
+    ),
+
+    INSERT_USERKEY(
+            "INSERT INTO 'UserKeys' (userId, privateKey, publicKey) VALUES (?, ?, ?)"
     ),
 
     SELECT_ALL_USER(

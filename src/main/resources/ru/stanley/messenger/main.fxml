@@ -20,6 +20,9 @@
                      <center>
                         <ListView fx:id="chatList" prefHeight="400.0" prefWidth="150.0" BorderPane.alignment="CENTER" />
                      </center>
+                     <bottom>
+                        <Button fx:id="buttonSearchUser" mnemonicParsing="false" text="Button" BorderPane.alignment="CENTER" />
+                     </bottom>
                   </BorderPane>
                </children>
             </AnchorPane>

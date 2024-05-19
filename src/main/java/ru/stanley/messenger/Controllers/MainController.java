@@ -12,6 +12,7 @@ import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Message;
 import ru.stanley.messenger.Models.User;
+import ru.stanley.messenger.Utils.WindowsOpener;
 
 
 public class MainController {
@@ -33,6 +34,9 @@ public class MainController {
 
     @FXML
     private Button buttonSend;
+
+    @FXML
+    public Button buttonSearchUser;
 
     private static final User currentUser = Messenger.getAccountUser();
     private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
@@ -60,8 +64,11 @@ public class MainController {
         buttonSend.setOnAction(actionEvent -> {
             sendMessage(currentUser, messageField.getText());
         });
-    }
 
+        buttonSearchUser.setOnAction(actionEvent -> {
+            WindowsOpener.openWindow("userSearchForm.fxml");
+        });
+    }
 
     private void sendMessage(User currentUser, String text) {
         if (!text.isEmpty()) {
@@ -85,6 +92,22 @@ public class MainController {
 
         messageHistory.getChildren().add(messageBox);
         clientConnectionHandler.sendMessage(Message.fromJSON(text));
+    }
+
+    public void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    public void showSuccessNotification(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private HBox gethBox(String sender, String text) {

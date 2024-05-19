@@ -1,17 +1,23 @@
 package ru.stanley.messenger.Handler;
 
 import javafx.application.Platform;
+import org.json.JSONObject;
 import ru.stanley.messenger.Controllers.AuthController;
+import ru.stanley.messenger.Controllers.MainController;
 import ru.stanley.messenger.Controllers.RegistryController;
+import ru.stanley.messenger.Database.DatabaseConnection;
+import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Message;
 import ru.stanley.messenger.Models.User;
 import ru.stanley.messenger.Utils.ControllerRegistry;
-import ru.stanley.messenger.Utils.WindowsOpener;
+import ru.stanley.messenger.Utils.DHUtil;
+import ru.stanley.messenger.Utils.MessageType;
 
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.sql.SQLException;
 
 
 public class ClientConnectionHandler {
@@ -23,6 +29,9 @@ public class ClientConnectionHandler {
     private boolean running;
     private AuthController authController;
     private RegistryController registryController;
+    private MainController mainController;
+    private static final DatabaseConnection database = Messenger.getDatabaseConnection();
+    private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
 
     public void connect(String serverAddress, int port) {
         try {
@@ -77,20 +86,20 @@ public class ClientConnectionHandler {
 
                 handleMessage(message);
             }
-        } catch (IOException e) {
+        } catch (IOException | SQLException | NoSuchAlgorithmException | NoSuchProviderException e) {
             if (running) {
                 e.printStackTrace();
             }
         }
     }
 
-    // Метод для обработки сообщений от сервера
-    private void handleMessage(Message message) {
+    private void handleMessage(Message message) throws SQLException, NoSuchAlgorithmException, NoSuchProviderException {
         String messageType = message.getType();
+        User currentUser;
 
         switch (messageType) {
             case "AUTH_SUCCESS":
-                User currentUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
+                currentUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
                         message.getData().getString("email"), message.getData().getString("phone"));
 
                 authController = (AuthController) ControllerRegistry.getController("AuthController");
@@ -122,7 +131,37 @@ public class ClientConnectionHandler {
                 if (authController != null) {
                     Platform.runLater(() -> authController.authMessage(salt));
                 }
+                break;
+            case "USER_SUCCESS":
+                currentUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
+                        message.getData().getString("email"), message.getData().getString("phone"));
+                if (database.insertUser(currentUser)) {
+                    mainController = (MainController) ControllerRegistry.getController("MainController");
+                    if (mainController != null) {
+                        Platform.runLater(() -> mainController.showSuccessNotification("User successfully added"));
 
+                        KeyPair dhUtil = DHUtil.initDH();
+                        PublicKey publicKey = dhUtil.getPublic();
+                        PrivateKey privateKey = dhUtil.getPrivate();
+
+                        if (database.insertUserKey(currentUser.getUserId(), publicKey, privateKey)) {
+                            MessageType messageTypeSend = MessageType.REGUEST_FRIEND;
+                            JSONObject jsonMessage = messageTypeSend.createJsonObject();
+
+                            jsonMessage.getJSONObject("data").put("userId", currentUser.getUserId());
+                            jsonMessage.getJSONObject("data").put("publicKey", publicKey);
+
+                            clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
+                        }
+                    }
+                }
+                break;
+            case "USER_FAIL":
+                mainController = (MainController) ControllerRegistry.getController("MainController");
+                if (mainController != null) {
+                    Platform.runLater(() -> mainController.showAlert("User not found!"));
+                }
+                break;
 
         }
     }

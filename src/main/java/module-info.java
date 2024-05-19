@@ -5,6 +5,7 @@ module ru.stanley.messenger {
     requires java.sql.rowset;
     requires org.json;
     requires org.bouncycastle.provider;
+    requires java.desktop;
 
 
     opens ru.stanley.messenger to javafx.fxml;

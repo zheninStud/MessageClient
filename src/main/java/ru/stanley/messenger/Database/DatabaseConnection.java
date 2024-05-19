@@ -1,12 +1,16 @@
 package ru.stanley.messenger.Database;
 
 import ru.stanley.messenger.Messenger;
+import ru.stanley.messenger.Models.Chat;
 import ru.stanley.messenger.Utils.SQLQuery;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
+import ru.stanley.messenger.Models.User;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.sql.*;
 import java.net.URL;
 
@@ -28,6 +32,7 @@ public class DatabaseConnection {
         executeStatement(SQLQuery.CREATE_TABLE_CHAT);
         executeStatement(SQLQuery.CREATE_TABLE_MESSAGE);
         executeStatement(SQLQuery.CREATE_TABLE_CHAT_USER);
+        executeStatement(SQLQuery.CREATE_TABLE_USERKEY);
 
 
 //        executeStatement(SQLQuery.INSERT_USER, "Stanley000", "test@mail.ru", "89178060015");
@@ -204,5 +209,25 @@ public class DatabaseConnection {
             factory = RowSetProvider.newFactory();
         }
         return factory.createCachedRowSet();
+    }
+
+    public boolean insertUser(User user) throws SQLException {
+        int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone());
+
+        if (result > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean insertUserKey(String userId, PublicKey publicKey, PrivateKey privateKey) throws SQLException {
+        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY, userId, privateKey, publicKey);
+
+        if (result > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

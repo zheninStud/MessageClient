@@ -1,10 +1,9 @@
 plugins {
   id 'java'
   id 'application'
-  id 'org.javamodularity.moduleplugin' version '1.8.12'
-  id 'org.openjfx.javafxplugin' version '0.0.13'
-  id 'org.beryx.jlink' version '2.25.0'
-  id 'com.github.johnrengelman.shadow' version '7.1.2'
+  id 'org.javamodularity.moduleplugin' version '1.8.15'
+  id 'org.openjfx.javafxplugin' version '0.1.0'
+  id 'org.beryx.jlink' version '3.0.1'
 }
 
 group 'ru.stanley'
@@ -12,10 +11,6 @@ version '1.0-SNAPSHOT'
 
 repositories {
   mavenCentral()
-}
-
-ext {
-  junitVersion = '5.10.0'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -28,34 +23,21 @@ application {
 }
 
 javafx {
-  version = '17.0.6'
+  version = '21.0.3'
   modules = ['javafx.controls', 'javafx.fxml']
 }
 
-tasks.jar {
-  manifest {
-    attributes["Main-Class"] = "ru.stanley.messenger.Messenger"
-  }
-}
-
 dependencies {
-  testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-  implementation('org.xerial:sqlite-jdbc:3.44.1.0')
-  implementation('org.openjfx:javafx-controls:17.0.6')
-  implementation ('org.openjfx:javafx-fxml:17.0.6')
-  implementation('org.json:json:20231013')
+  implementation('org.xerial:sqlite-jdbc:3.45.3.0')
+  implementation('org.json:json:20240303')
   implementation('org.bouncycastle:bcprov-jdk18on:1.78.1')
 }
 
-test {
-useJUnitPlatform()}
-
 jlink {
   imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
-  options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+  options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages', '--ignore-signing-information']
   launcher {
-    name = 'app'
+    name = 'Messenger'
   }
 }
 

@@ -18,13 +18,28 @@ public enum MessageType {
             "{\"type\":\"SET_SALT\",\"data\":{\"salt\":\"\"}}"
     ),
     REGISTER_SUCCESS(
-        "{\"type\":\"REGISTER_SUCCESS\"}"
+            "{\"type\":\"REGISTER_SUCCESS\"}"
     ),
     REGISTER_FAIL(
             "{\"type\":\"REGISTER_FAIL\",\"data\":{\"errorCode\":\"\"}}"
     ),
+    REGUEST_FRIEND(
+            "{\"type\":\"REGUEST_FRIEND\",\"data\":{\"userId\":\"\",\"publicKey\":\"\"}}"
+    ),
     CHAT_MESSAGE(
             "{\"type\":\"CHAT_MESSAGE\",\"data\":{\"sender\":\"\",\"recipient\":\"\",\"message\":\"\"}}"
+    ),
+    GET_USER(
+            "{\"type\":\"GET_USER\",\"data\":{\"username\":\"\"}}"
+    ),
+    USER_SUCCESS(
+            "{\"type\":\"USER_SUCCESS\",\"data\":{\"userId\":\"\",\"userName\":\"\",\"email\":\"\",\"phone\":\"\"}}"
+    ),
+    USER_FAIL(
+            "{\"type\":\"USER_FAIL\"}"
+    ),
+    DH_PUBLIC(
+            "{\"type\":\"DH_PUBLIC\",\"data\":{\"userId\":\"\",\"publicKey\":\"\"}}"
     ),
     AUTH_SUCCESS(
             "{\"type\":\"AUTH_SUCCESS\",\"data\":{\"userId\":\"\",\"userName\":\"\",\"email\":\"\",\"phone\":\"\"}}"

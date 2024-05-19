@@ -14,13 +14,13 @@ import ru.stanley.messenger.Utils.GOSTHashing;
 import ru.stanley.messenger.Utils.MessageType;
 import ru.stanley.messenger.Utils.WindowsOpener;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 
 public class AuthController {
 
     private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
+    private static final Messenger messenger = Messenger.getInstance();
 
     @FXML
     private Button buttonAuth;
@@ -36,7 +36,6 @@ public class AuthController {
 
     @FXML
     void initialize() {
-
         buttonAuth.setOnAction(actionEvent ->
         {
             GOSTHashing.requestGenerateSalt(fieldLogin.getText());
@@ -72,6 +71,7 @@ public class AuthController {
     }
 
     public void openMainForm(User user) {
+        messenger.openDatabaseConnection();
         Messenger.setAccountUser(user);
         WindowsOpener.openAndCloseWindows("main.fxml", (Stage) buttonAuth.getScene().getWindow());
     }
