@@ -50,7 +50,7 @@ public class AuthController {
         return GOSTHashing.encodeSaltAndHash(convertedByteSalt, hashedPassword);
     }
 
-    private void showAlert(String message) {
+    public void showAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText(null);

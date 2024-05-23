@@ -1,6 +1,7 @@
 package ru.stanley.messenger.Controllers;
 
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,7 +14,9 @@ import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Message;
 import ru.stanley.messenger.Models.User;
+import ru.stanley.messenger.Utils.ControllerRegistry;
 import ru.stanley.messenger.Utils.WindowsOpener;
+import ru.stanley.messenger.Controllers.UserFriendRequestController;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -88,12 +91,16 @@ public class MainController {
         chatList.setItems(database.selectAllUser());
     }
 
-    private void openChat(User user) {
-        if (user.getPrivateKey() == null) {
+    private void openChat(User selectedUser) {
+        if (selectedUser.getPrivateKey() == null) {
             WindowsOpener.openWindow("userFriendRequest.fxml");
+            UserFriendRequestController userFriendRequestController = (UserFriendRequestController) ControllerRegistry.getController("UserFriendRequestController");
+            if (userFriendRequestController != null) {
+                Platform.runLater(() -> userFriendRequestController.setUsername(selectedUser));
+            }
         }
 
-        System.out.println(user.getPrivateKey());
+        System.out.println(selectedUser.getPrivateKey());
     }
 
     public void reloadUser() throws SQLException {

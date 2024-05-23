@@ -125,7 +125,7 @@ public class ClientConnectionHandler {
             case "REGISTER_FAIL":
                 registryController = (RegistryController) ControllerRegistry.getController("RegistryController");
                 if (registryController != null) {
-                    Platform.runLater(() -> registryController.checkAlert(message.getData().getString("alert")));
+                    Platform.runLater(() -> registryController.checkAlert(message.getData().getString("errorCode")));
                 }
                 break;
             case "SET_SALT":
@@ -133,6 +133,12 @@ public class ClientConnectionHandler {
                 authController = (AuthController) ControllerRegistry.getController("AuthController");
                 if (authController != null) {
                     Platform.runLater(() -> authController.authMessage(salt));
+                }
+                break;
+            case "GET_SALT_FALSE":
+                authController = (AuthController) ControllerRegistry.getController("AuthController");
+                if (authController != null) {
+                    Platform.runLater(() -> authController.showAlert("Username is not found"));
                 }
                 break;
             case "USER_SUCCESS":

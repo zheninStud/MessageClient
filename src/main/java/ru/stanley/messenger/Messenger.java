@@ -32,6 +32,7 @@ public class Messenger extends Application {
     @Override
     public void stop() throws Exception {
         clientConnectionHandler.disconnect();
+        databaseConnection.disconnect();
         super.stop();
     }
 
