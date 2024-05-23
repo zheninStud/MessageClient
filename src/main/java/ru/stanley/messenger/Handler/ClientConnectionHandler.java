@@ -55,6 +55,7 @@ public class ClientConnectionHandler {
             running = true;
             receiveThread = new Thread(this::receiveMessages);
             receiveThread.start();
+            System.out.println("Connected to the server 2");
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException | KeyStoreException | CertificateException   e) {
             e.printStackTrace();
         }
@@ -89,9 +90,7 @@ public class ClientConnectionHandler {
             }
         } catch (IOException | SQLException | NoSuchAlgorithmException | NoSuchProviderException |
                  InvalidKeySpecException | InvalidKeyException e) {
-            if (running) {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         }
     }
 
@@ -208,6 +207,7 @@ public class ClientConnectionHandler {
                 if (database.selectSecretKey(userIdFriend, DHUtil.convertBytesToPublicKey(publicKeyFriend))) {
 
                 }
+                break;
         }
     }
 }
