@@ -96,6 +96,7 @@ public class ClientConnectionHandler {
     private void handleMessage(Message message) throws SQLException, NoSuchAlgorithmException, NoSuchProviderException {
         String messageType = message.getType();
         User currentUser;
+        User newUser;
 
         switch (messageType) {
             case "AUTH_SUCCESS":
@@ -133,9 +134,9 @@ public class ClientConnectionHandler {
                 }
                 break;
             case "USER_SUCCESS":
-                currentUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
+                newUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
                         message.getData().getString("email"), message.getData().getString("phone"));
-                if (database.insertUser(currentUser)) {
+                if (database.insertUser(newUser)) {
                     mainController = (MainController) ControllerRegistry.getController("MainController");
                     if (mainController != null) {
                         Platform.runLater(() -> mainController.showSuccessNotification("User successfully added"));
@@ -144,11 +145,11 @@ public class ClientConnectionHandler {
                         PublicKey publicKey = dhUtil.getPublic();
                         PrivateKey privateKey = dhUtil.getPrivate();
 
-                        if (database.insertUserKey(currentUser.getUserId(), publicKey, privateKey)) {
+                        if (database.insertUserKey(newUser.getUserId(), publicKey, privateKey)) {
                             MessageType messageTypeSend = MessageType.REGUEST_FRIEND;
                             JSONObject jsonMessage = messageTypeSend.createJsonObject();
 
-                            jsonMessage.getJSONObject("data").put("userId", currentUser.getUserId());
+                            jsonMessage.getJSONObject("data").put("userId", newUser.getUserId());
                             jsonMessage.getJSONObject("data").put("publicKey", publicKey);
 
                             clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
@@ -162,6 +163,27 @@ public class ClientConnectionHandler {
                     Platform.runLater(() -> mainController.showAlert("User not found!"));
                 }
                 break;
+            case "REGUEST_FRIEND_CLIENT":
+                newUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
+                        message.getData().getString("email"), message.getData().getString("phone"));
+
+                if (database.insertUserRequest(newUser)) {
+                    if (database.insertUserKeyRequest(newUser.getUserId(), message.getData().getString("publicKey"))) {
+                        MessageType messageTypeSend = MessageType.REGUEST_FRIEND_CLIENT_TAKEN;
+                        JSONObject jsonMessage = messageTypeSend.createJsonObject();
+
+                        jsonMessage.getJSONObject("data").put("userId", newUser.getUserId());
+
+                        clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
+
+                    }
+                }
+                break;
+            case "REGUEST_FRIEND_CLIENT_TAKEN_CLIENT":
+                String userReguestTaken = message.getData().getString("userId");
+
+                //if (database.insertUserKey())
+
 
         }
     }

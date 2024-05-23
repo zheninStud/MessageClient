@@ -1,5 +1,6 @@
 package ru.stanley.messenger.Database;
 
+import org.json.JSONObject;
 import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Chat;
 import ru.stanley.messenger.Utils.SQLQuery;
@@ -211,23 +212,36 @@ public class DatabaseConnection {
         return factory.createCachedRowSet();
     }
 
-    public boolean insertUser(User user) throws SQLException {
+    public boolean insertUser(User user) {
         int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone());
 
-        if (result > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return result > 0;
     }
 
-    public boolean insertUserKey(String userId, PublicKey publicKey, PrivateKey privateKey) throws SQLException {
+    public boolean insertUserKey(String userId, PublicKey publicKey, PrivateKey privateKey) {
         int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY, userId, privateKey, publicKey);
 
-        if (result > 0) {
-            return true;
-        } else {
-            return false;
+        return result > 0;
+    }
+
+    public boolean insertUserRequest(User user) {
+        int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone());
+
+        return result > 0;
+    }
+
+    public boolean insertUserKeyRequest(String userId, String publicKey) {
+        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY_REQUEST, userId, publicKey, 1);
+
+        return result > 0;
+
+    }
+
+    public void selectUserKey(String userReguestTaken) throws SQLException {
+        ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_USERKEY, userReguestTaken);
+
+        if (resultSet.next()) {
+
         }
     }
 }

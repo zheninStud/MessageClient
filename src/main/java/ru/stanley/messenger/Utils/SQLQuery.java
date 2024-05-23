@@ -5,10 +5,11 @@ public enum SQLQuery {
     CREATE_TABLE_USER(
             "CREATE TABLE IF NOT EXISTS User (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "userId INTEGER PRIMARY KEY," +
+                    "userId TEXT," +
                     "userName TEXT," +
                     "email TEXT," +
-                    "phone TEXT" +
+                    "phone TEXT," +
+                    "privateKey BLOB" +
                     ")"
     ),
 
@@ -44,15 +45,22 @@ public enum SQLQuery {
 
     CREATE_TABLE_USERKEY(
             "CREATE TABLE IF NOT EXISTS UserKeys (" +
-                    "userId INTEGER PRIMARY KEY," +
-                    "privateKey BLOB NOT NULL," +
+                    "id INTEGER PRIMARY KEY," +
+                    "userId TEXT," +
+                    "privateKey BLOB," +
                     "publicKey BLOB NOT NULL," +
+                    "is_request INT," +
+                    "is_client_taken INT," +
                     "FOREIGN KEY (UserId) REFERENCES User(id)" +
                     ")"
     ),
 
     INSERT_USER(
             "INSERT INTO 'User' (userId, userName, email, phone) VALUES (?, ?, ?, ?)"
+    ),
+
+    INSERT_USER_PRIVATEKEY(
+            "UPDATE User SET privateKey = ? WHERE userId = ?"
     ),
 
     INSERT_CHAT(
@@ -69,6 +77,14 @@ public enum SQLQuery {
 
     INSERT_USERKEY(
             "INSERT INTO 'UserKeys' (userId, privateKey, publicKey) VALUES (?, ?, ?)"
+    ),
+
+    INSERT_USERKEY_REQUEST(
+            "INSERT INTO 'UserKeys' (userId, publicKey, is_request) VALUES (?, ?, ?)"
+    ),
+
+    SELECT_USERKEY(
+            "SELECT * FROM UserKeys WHERE userId = ?"
     ),
 
     SELECT_ALL_USER(

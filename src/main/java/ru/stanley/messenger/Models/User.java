@@ -5,6 +5,7 @@ public class User {
     private String userName;
     private String email;
     private String phone;
+    private String privateKey;
 
     public User(String userId, String userName, String email, String phone) {
         this.userId = userId;
@@ -44,4 +45,8 @@ public class User {
     public void setPhone(String phone) {
         this.phone = phone;
     }
+
+    public String getPrivateKey() { return privateKey; }
+
+    public void setPrivateKey(String privateKey) { this.privateKey = privateKey; }
 }
