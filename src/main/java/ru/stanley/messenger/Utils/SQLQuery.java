@@ -9,7 +9,7 @@ public enum SQLQuery {
                     "userName TEXT," +
                     "email TEXT," +
                     "phone TEXT," +
-                    "privateKey BLOB" +
+                    "privateKey TEXT" +
                     ")"
     ),
 
@@ -47,19 +47,23 @@ public enum SQLQuery {
             "CREATE TABLE IF NOT EXISTS UserKeys (" +
                     "id INTEGER PRIMARY KEY," +
                     "userId TEXT," +
-                    "privateKey BLOB," +
-                    "publicKey BLOB NOT NULL," +
+                    "privateKey TEXT," +
+                    "publicKey TEXT," +
                     "is_request INT," +
                     "is_client_taken INT," +
                     "FOREIGN KEY (UserId) REFERENCES User(id)" +
                     ")"
     ),
 
+    DELETE_USER_KEY(
+            "DELETE FROM UserKeys WHERE userId = ?"
+    ),
+
     INSERT_USER(
             "INSERT INTO 'User' (userId, userName, email, phone) VALUES (?, ?, ?, ?)"
     ),
 
-    INSERT_USER_PRIVATEKEY(
+    UPDATE_USER_PRIVATE_KEY(
             "UPDATE User SET privateKey = ? WHERE userId = ?"
     ),
 
@@ -81,6 +85,10 @@ public enum SQLQuery {
 
     INSERT_USERKEY_REQUEST(
             "INSERT INTO 'UserKeys' (userId, publicKey, is_request) VALUES (?, ?, ?)"
+    ),
+
+    INSERT_USERKEY_IS_CLIENT_TAKEN(
+            "UPDATE UserKeys SET is_client_taken = ? WHERE userId = ?"
     ),
 
     SELECT_USERKEY(

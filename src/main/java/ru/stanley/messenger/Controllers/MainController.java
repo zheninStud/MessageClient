@@ -8,17 +8,21 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import ru.stanley.messenger.Database.DatabaseConnection;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Message;
 import ru.stanley.messenger.Models.User;
 import ru.stanley.messenger.Utils.WindowsOpener;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 
 public class MainController {
 
     @FXML
-    private ListView<String> chatList;
+    private ListView<User> chatList;
 
     @FXML
     private TextField messageField;
@@ -40,12 +44,15 @@ public class MainController {
 
     private static final User currentUser = Messenger.getAccountUser();
     private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
+    private static final DatabaseConnection database = Messenger.getDatabaseConnection();
 
     @FXML
-    void initialize() {
+    void initialize() throws SQLException {
+
+        loadUser();
 
 
-        chatList.getItems().addAll("Chat 1", "Chat 2", "Chat 3");
+        //chatList.getItems().addAll("Chat 1", "Chat 2", "Chat 3");
 
 //        addMessage("Это тестовое сообщение 1", true);
 //        addMessage("Это тестовое сообщение 2", false);
@@ -60,6 +67,13 @@ public class MainController {
 //        sendMessage("You", "Это тестовое сообщение 4");
 //        sendMessage("Sol", "Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5");
 
+        chatList.setOnMouseClicked(event -> {
+            User selectedUser = chatList.getSelectionModel().getSelectedItem();
+            if (selectedUser != null) {
+
+                openChat(selectedUser);
+            }
+        });
 
         buttonSend.setOnAction(actionEvent -> {
             sendMessage(currentUser, messageField.getText());
@@ -68,6 +82,23 @@ public class MainController {
         buttonSearchUser.setOnAction(actionEvent -> {
             WindowsOpener.openWindow("userSearchForm.fxml");
         });
+    }
+
+    private void loadUser() throws SQLException {
+        chatList.setItems(database.selectAllUser());
+    }
+
+    private void openChat(User user) {
+        if (user.getPrivateKey() == null) {
+            WindowsOpener.openWindow("userFriendRequest.fxml");
+        }
+
+        System.out.println(user.getPrivateKey());
+    }
+
+    public void reloadUser() throws SQLException {
+        chatList.getItems().clear();
+        chatList.setItems(database.selectAllUser());
     }
 
     private void sendMessage(User currentUser, String text) {

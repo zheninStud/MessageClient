@@ -1,19 +1,22 @@
 package ru.stanley.messenger.Database;
 
-import org.json.JSONObject;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import ru.stanley.messenger.Messenger;
-import ru.stanley.messenger.Models.Chat;
+import ru.stanley.messenger.Utils.DHUtil;
 import ru.stanley.messenger.Utils.SQLQuery;
 
+import javax.crypto.SecretKey;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
 import ru.stanley.messenger.Models.User;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 import java.net.URL;
+import java.util.Arrays;
 
 public class DatabaseConnection {
 
@@ -218,7 +221,7 @@ public class DatabaseConnection {
         return result > 0;
     }
 
-    public boolean insertUserKey(String userId, PublicKey publicKey, PrivateKey privateKey) {
+    public boolean insertUserKey(String userId, String publicKey, String privateKey) {
         int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY, userId, privateKey, publicKey);
 
         return result > 0;
@@ -237,11 +240,66 @@ public class DatabaseConnection {
 
     }
 
-    public void selectUserKey(String userReguestTaken) throws SQLException {
+    public boolean updateUserKey(String userId, Boolean is_client_taken) {
+        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY_IS_CLIENT_TAKEN, is_client_taken, userId);
+
+        return result > 0;
+    }
+
+    public boolean updateUserPrivateKey(String userId, String privateKey) {
+        int result = executeUpdateStatement(SQLQuery.UPDATE_USER_PRIVATE_KEY, privateKey, userId);
+
+        return result > 0;
+    }
+
+    public ObservableList<User> selectAllUser() throws SQLException {
+        ObservableList<User> userList = FXCollections.observableArrayList();
+        ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_ALL_USER);
+
+        if (resultSet.next()) {
+            String userId = String.valueOf(resultSet.getInt("userId"));
+            String userName = resultSet.getString("userName");
+            String email = resultSet.getString("email");
+            String phone = resultSet.getString("phone");
+
+            userList.add(new User(userId, userName, email, phone));
+        }
+
+        return userList;
+    }
+
+    public boolean deleteUserKey(String userId) {
+        int result = executeUpdateStatement(SQLQuery.DELETE_USER_KEY, userId);
+
+        return result > 0;
+    }
+
+    public PublicKey selectUserKey(String userReguestTaken) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
         ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_USERKEY, userReguestTaken);
 
         if (resultSet.next()) {
-
+            String publicKeyBlob = resultSet.getString("publicKey");
+            return DHUtil.convertBytesToPublicKey(publicKeyBlob);
         }
+
+        return null;
+    }
+
+    public boolean selectSecretKey(String userId, PublicKey publicKeyOther) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException, InvalidKeyException {
+        ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_USERKEY, userId);
+
+        if (resultSet.next()) {
+            String privateKeyBlob = resultSet.getString("privateKey");
+            SecretKey secretKey = DHUtil.generateSharedSecret(DHUtil.convertBytesToPrivateKey(privateKeyBlob), publicKeyOther);
+
+            System.out.println("SecretKey1: " + DHUtil.keyToString(secretKey));
+
+            updateUserPrivateKey(userId, DHUtil.keyToString(secretKey));
+            deleteUserKey(userId);
+
+            return true;
+        }
+
+        return false;
     }
 }

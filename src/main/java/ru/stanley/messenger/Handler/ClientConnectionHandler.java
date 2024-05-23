@@ -17,6 +17,7 @@ import javax.net.ssl.*;
 import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 
 
@@ -86,14 +87,15 @@ public class ClientConnectionHandler {
 
                 handleMessage(message);
             }
-        } catch (IOException | SQLException | NoSuchAlgorithmException | NoSuchProviderException e) {
+        } catch (IOException | SQLException | NoSuchAlgorithmException | NoSuchProviderException |
+                 InvalidKeySpecException | InvalidKeyException e) {
             if (running) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void handleMessage(Message message) throws SQLException, NoSuchAlgorithmException, NoSuchProviderException {
+    private void handleMessage(Message message) throws SQLException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, InvalidKeyException {
         String messageType = message.getType();
         User currentUser;
         User newUser;
@@ -145,12 +147,12 @@ public class ClientConnectionHandler {
                         PublicKey publicKey = dhUtil.getPublic();
                         PrivateKey privateKey = dhUtil.getPrivate();
 
-                        if (database.insertUserKey(newUser.getUserId(), publicKey, privateKey)) {
+                        if (database.insertUserKey(newUser.getUserId(), DHUtil.keyToString(publicKey), DHUtil.keyToString(privateKey))) {
                             MessageType messageTypeSend = MessageType.REGUEST_FRIEND;
                             JSONObject jsonMessage = messageTypeSend.createJsonObject();
 
                             jsonMessage.getJSONObject("data").put("userId", newUser.getUserId());
-                            jsonMessage.getJSONObject("data").put("publicKey", publicKey);
+                            jsonMessage.getJSONObject("data").put("publicKey", DHUtil.keyToString(publicKey));
 
                             clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
                         }
@@ -182,9 +184,24 @@ public class ClientConnectionHandler {
             case "REGUEST_FRIEND_CLIENT_TAKEN_CLIENT":
                 String userReguestTaken = message.getData().getString("userId");
 
-                //if (database.insertUserKey())
+                if (database.updateUserKey(userReguestTaken, true)) {
+                    mainController = (MainController) ControllerRegistry.getController("MainController");
+                    if (mainController != null) {
+                        Platform.runLater(() -> mainController.showSuccessNotification("User taken request friend"));
+                    }
+                }
+                break;
+            case "REGUEST_FRIEND_CLIENT_SUCCESS_SERVER":
+                break;
 
+            case "REGUEST_FRIEND_CLIENT_SUCCESS_CLIENT":
 
+                String userIdFriend = message.getData().getString("userId");
+                String publicKeyFriend = message.getData().getString("publicKey");
+
+                if (database.selectSecretKey(userIdFriend, DHUtil.convertBytesToPublicKey(publicKeyFriend))) {
+
+                }
         }
     }
 }
