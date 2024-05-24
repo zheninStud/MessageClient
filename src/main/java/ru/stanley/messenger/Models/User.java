@@ -1,5 +1,9 @@
 package ru.stanley.messenger.Models;
 
+import ru.stanley.messenger.Utils.DHUtil;
+
+import javax.crypto.SecretKey;
+
 public class User {
     private String userId;
     private String userName;
@@ -46,7 +50,9 @@ public class User {
         this.phone = phone;
     }
 
-    public String getPrivateKey() { return privateKey; }
+    public SecretKey getPrivateKey() {
+        return DHUtil.convertStringToSecretKey(privateKey);
+    }
 
     public void setPrivateKey(String privateKey) { this.privateKey = privateKey; }
 }

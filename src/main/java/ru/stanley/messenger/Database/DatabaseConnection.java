@@ -1,8 +1,12 @@
 package ru.stanley.messenger.Database;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import ru.stanley.messenger.Controllers.MainController;
 import ru.stanley.messenger.Messenger;
+import ru.stanley.messenger.Models.UserMessage;
+import ru.stanley.messenger.Utils.ControllerRegistry;
 import ru.stanley.messenger.Utils.DHUtil;
 import ru.stanley.messenger.Utils.SQLQuery;
 
@@ -17,6 +21,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 
 public class DatabaseConnection {
 
@@ -24,11 +29,12 @@ public class DatabaseConnection {
     private String pathDb;
     private RowSetFactory factory;
     private Connection connection;
+    private MainController mainController;
 
     public DatabaseConnection() throws SQLException {
 
         checkPath();
-       // connection = DriverManager.getConnection("jdbc:sqlite:" + pathDb);
+        //connection = DriverManager.getConnection("jdbc:sqlite:" + pathDb);
         connection = DriverManager.getConnection("jdbc:sqlite:mydatabase.db");
         System.out.println("Соединение с локальной базой данных установлено.");
 
@@ -240,8 +246,14 @@ public class DatabaseConnection {
 
     }
 
-    public boolean updateUserKey(String userId, Boolean is_client_taken) {
-        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY_IS_CLIENT_TAKEN, is_client_taken, userId);
+    public boolean updateUserKey(String userId) {
+        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY_IS_CLIENT_TAKEN, 1, userId);
+
+        return result > 0;
+    }
+
+    public boolean updateUserKeySuccess(String userId) {
+        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY_IS_SUCCESS_SERVER, 1, userId);
 
         return result > 0;
     }
@@ -257,12 +269,15 @@ public class DatabaseConnection {
         ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_ALL_USER);
 
         if (resultSet.next()) {
-            String userId = String.valueOf(resultSet.getInt("userId"));
+            String userId = String.valueOf(resultSet.getString("userId"));
             String userName = resultSet.getString("userName");
             String email = resultSet.getString("email");
             String phone = resultSet.getString("phone");
+            String privateKey = resultSet.getString("privateKey");
 
-            userList.add(new User(userId, userName, email, phone));
+            User user = new User(userId, userName, email, phone);
+            user.setPrivateKey(privateKey);
+            userList.add(user);
         }
 
         return userList;
@@ -285,14 +300,46 @@ public class DatabaseConnection {
         return null;
     }
 
+    public boolean selectUserKeyAll(String userId) throws SQLException {
+        ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_USERKEY, userId);
+
+        if (resultSet.next()) {
+            int isRequest = resultSet.getInt("is_request");
+            int isClientTaken = resultSet.getInt("is_client_taken");
+            int isSuccessServer = resultSet.getInt("is_success_server");
+
+            mainController = (MainController) ControllerRegistry.getController("MainController");
+            if (mainController != null) {
+                if (isRequest == 1) {
+                    Platform.runLater(() -> mainController.showSuccessNotification("The request has been sent to the user"));
+                    return false;
+                }
+
+                if (isClientTaken == 1) {
+                    Platform.runLater(() -> mainController.showSuccessNotification("The request was received by the user"));
+                    return false;
+                }
+
+                if (isSuccessServer == 1) {
+                    Platform.runLater(() -> mainController.showSuccessNotification("The request has been confirmed by the user"));
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
     public boolean selectSecretKey(String userId, PublicKey publicKeyOther) throws SQLException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException, InvalidKeyException {
         ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_USERKEY, userId);
 
         if (resultSet.next()) {
             String privateKeyBlob = resultSet.getString("privateKey");
             SecretKey secretKey = DHUtil.generateSharedSecret(DHUtil.convertBytesToPrivateKey(privateKeyBlob), publicKeyOther);
-
-            System.out.println("SecretKey1: " + DHUtil.keyToString(secretKey));
 
             updateUserPrivateKey(userId, DHUtil.keyToString(secretKey));
             deleteUserKey(userId);
@@ -301,5 +348,17 @@ public class DatabaseConnection {
         }
 
         return false;
+    }
+
+    public List<UserMessage> selectMessageAll(String userIdSender, String userIdReceiver) throws SQLException {
+        ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_MESSAGE_ALL, userIdSender, userIdReceiver, userIdReceiver, userIdSender);
+
+        if (resultSet.next()) {
+            String senderId  = resultSet.getString("senderId");
+            String receiverId = resultSet.getString("receiverId");
+            String content = resultSet.getString("content");
+
+
+        }
     }
 }

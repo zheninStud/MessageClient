@@ -8,9 +8,9 @@
             fx:controller="ru.stanley.messenger.Controllers.UserFriendRequestController"
             prefHeight="400.0" prefWidth="600.0">
 
-    <VBox spacing="10" alignment="CENTER" padding="20">
+    <VBox spacing="10" alignment="CENTER">
         <Label fx:id="requestLabel"/>
         <Button fx:id="acceptButton" text="Принять" />
-        <Button fx:id="denyButton" text="Отклонить"/>
+        <Button fx:id="denyButton" text="Отклонить" />
     </VBox>
 </AnchorPane>

@@ -22,7 +22,7 @@ public class DHUtil {
         keyAgreement.init(privateKey);
         keyAgreement.doPhase(otherClientPublicKey, true);
         byte[] sharedSecretBytes = keyAgreement.generateSecret();
-        return new SecretKeySpec(sharedSecretBytes, "Kuznyechik");
+        return new SecretKeySpec(sharedSecretBytes, "GOST3412_2015");
     }
 
     public static PublicKey convertBytesToPublicKey(String key) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
@@ -41,7 +41,7 @@ public class DHUtil {
 
     public static SecretKey convertStringToSecretKey(String keyString) {
         byte[] keyBytes = Base64.getDecoder().decode(keyString);
-        return new SecretKeySpec(keyBytes, "Kuznyechik");
+        return new SecretKeySpec(keyBytes, "GOST3412_2015");
     }
 
     public static String keyToString(java.security.Key key) {

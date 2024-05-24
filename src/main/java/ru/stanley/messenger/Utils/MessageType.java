@@ -51,7 +51,7 @@ public enum MessageType {
             "{\"type\":\"REGUEST_FRIEND_CLIENT_SUCCESS_CLIENT\",\"data\":{\"userId\":\"\",\"publicKey\":\"\"}}}"
     ),
     REGUEST_FRIEND_CLIENT_SUCCESS_SERVER(
-            "{\"type\":\"REGUEST_FRIEND_CLIENT_SUCCESS_SERVER\"}}"
+            "{\"type\":\"REGUEST_FRIEND_CLIENT_SUCCESS_SERVER\", \"data\":{\"userId\":\"\"}}}"
     ),
     REGUEST_FRIEND_CLIENT_DENY(
             "{\"type\":\"REGUEST_FRIEND_CLIENT_DENY\", \"data\":{\"userId\":\"\"}}"

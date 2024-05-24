@@ -15,10 +15,9 @@ import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Message;
 import ru.stanley.messenger.Models.User;
 import ru.stanley.messenger.Utils.ControllerRegistry;
+import ru.stanley.messenger.Utils.GOSTEncryptor;
 import ru.stanley.messenger.Utils.WindowsOpener;
-import ru.stanley.messenger.Controllers.UserFriendRequestController;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
@@ -45,9 +44,13 @@ public class MainController {
     @FXML
     public Button buttonSearchUser;
 
+    @FXML
+    public Button buttonUpdate;
+
     private static final User currentUser = Messenger.getAccountUser();
     private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
     private static final DatabaseConnection database = Messenger.getDatabaseConnection();
+    private static GOSTEncryptor gostEncryptor;
 
     @FXML
     void initialize() throws SQLException {
@@ -74,7 +77,19 @@ public class MainController {
             User selectedUser = chatList.getSelectionModel().getSelectedItem();
             if (selectedUser != null) {
 
-                openChat(selectedUser);
+                try {
+                    openChat(selectedUser);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        buttonUpdate.setOnAction(actionEvent -> {
+            try {
+                reloadUser();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         });
 
@@ -91,16 +106,19 @@ public class MainController {
         chatList.setItems(database.selectAllUser());
     }
 
-    private void openChat(User selectedUser) {
+    private void openChat(User selectedUser) throws SQLException {
         if (selectedUser.getPrivateKey() == null) {
-            WindowsOpener.openWindow("userFriendRequest.fxml");
-            UserFriendRequestController userFriendRequestController = (UserFriendRequestController) ControllerRegistry.getController("UserFriendRequestController");
-            if (userFriendRequestController != null) {
-                Platform.runLater(() -> userFriendRequestController.setUsername(selectedUser));
+            if (database.selectUserKeyAll(selectedUser.getUserId())) {
+                WindowsOpener.openWindow("userFriendRequest.fxml");
+                UserFriendRequestController userFriendRequestController = (UserFriendRequestController) ControllerRegistry.getController("UserFriendRequestController");
+                if (userFriendRequestController != null) {
+                    Platform.runLater(() -> userFriendRequestController.setUsername(selectedUser));
+                }
             }
+        } else {
+            gostEncryptor = new GOSTEncryptor(selectedUser.getPrivateKey());
+            database.selectMessageAll(currentUser.getUserId(), selectedUser.getUserId());
         }
-
-        System.out.println(selectedUser.getPrivateKey());
     }
 
     public void reloadUser() throws SQLException {
@@ -108,10 +126,10 @@ public class MainController {
         chatList.setItems(database.selectAllUser());
     }
 
-    private void sendMessage(User currentUser, String text) {
+    private void sendMessage(User user, String text) {
         if (!text.isEmpty()) {
 //            String sender = currentUser;
-            addMessage(currentUser.getUserName(), text);
+            addMessage(user.getUserName(), text);
         }
     }
 

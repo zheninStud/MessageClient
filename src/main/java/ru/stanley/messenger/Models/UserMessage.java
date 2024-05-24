@@ -3,24 +3,16 @@ package ru.stanley.messenger.Models;
 import java.util.Date;
 
 public class UserMessage {
-    private String messageId;
     private User sender;
+    private User receiver;
     private String content;
     private Date timestamp;
 
-    public UserMessage(String messageId, User sender, String content, Date timestamp) {
-        this.messageId = messageId;
+    public UserMessage(User sender, User receiver, String content, Date timestamp) {
         this.sender = sender;
+        this.receiver = receiver;
         this.content = content;
         this.timestamp = timestamp;
-    }
-
-    public String getMessageId() {
-        return messageId;
-    }
-
-    public void setMessageId(String messageId) {
-        this.messageId = messageId;
     }
 
     public User getSender() {
@@ -30,6 +22,10 @@ public class UserMessage {
     public void setSender(User sender) {
         this.sender = sender;
     }
+
+    public User getReceiver() { return receiver; }
+
+    public void setReceiver(User receiver) { this.receiver = receiver; }
 
     public String getContent() {
         return content;

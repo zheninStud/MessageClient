@@ -31,8 +31,6 @@ public class ClientConnectionHandler {
     private AuthController authController;
     private RegistryController registryController;
     private MainController mainController;
-    private static final DatabaseConnection database = Messenger.getDatabaseConnection();
-    private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
 
     public void connect(String serverAddress, int port) {
         try {
@@ -55,7 +53,6 @@ public class ClientConnectionHandler {
             running = true;
             receiveThread = new Thread(this::receiveMessages);
             receiveThread.start();
-            System.out.println("Connected to the server 2");
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException | KeyStoreException | CertificateException   e) {
             e.printStackTrace();
         }
@@ -98,6 +95,7 @@ public class ClientConnectionHandler {
         String messageType = message.getType();
         User currentUser;
         User newUser;
+        DatabaseConnection database = Messenger.getDatabaseConnection();
 
         switch (messageType) {
             case "AUTH_SUCCESS":
@@ -159,7 +157,7 @@ public class ClientConnectionHandler {
                             jsonMessage.getJSONObject("data").put("userId", newUser.getUserId());
                             jsonMessage.getJSONObject("data").put("publicKey", DHUtil.keyToString(publicKey));
 
-                            clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
+                            sendMessage(messageTypeSend.createMessage(jsonMessage));
                         }
                     }
                 }
@@ -181,15 +179,14 @@ public class ClientConnectionHandler {
 
                         jsonMessage.getJSONObject("data").put("userId", newUser.getUserId());
 
-                        clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
-
+                        sendMessage(messageTypeSend.createMessage(jsonMessage));
                     }
                 }
                 break;
             case "REGUEST_FRIEND_CLIENT_TAKEN_CLIENT":
                 String userReguestTaken = message.getData().getString("userId");
 
-                if (database.updateUserKey(userReguestTaken, true)) {
+                if (database.updateUserKey(userReguestTaken)) {
                     mainController = (MainController) ControllerRegistry.getController("MainController");
                     if (mainController != null) {
                         Platform.runLater(() -> mainController.showSuccessNotification("User taken request friend"));
@@ -197,15 +194,25 @@ public class ClientConnectionHandler {
                 }
                 break;
             case "REGUEST_FRIEND_CLIENT_SUCCESS_SERVER":
+                String userIdFriendServer = message.getData().getString("userId");
+
+                database.updateUserKeySuccess(userIdFriendServer);
                 break;
-
             case "REGUEST_FRIEND_CLIENT_SUCCESS_CLIENT":
-
                 String userIdFriend = message.getData().getString("userId");
                 String publicKeyFriend = message.getData().getString("publicKey");
 
                 if (database.selectSecretKey(userIdFriend, DHUtil.convertBytesToPublicKey(publicKeyFriend))) {
-
+                    mainController = (MainController) ControllerRegistry.getController("MainController");
+                    if (mainController != null) {
+                        Platform.runLater(() -> {
+                            try {
+                                mainController.reloadUser();
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
                 }
                 break;
         }

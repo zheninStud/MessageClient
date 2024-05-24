@@ -19,7 +19,6 @@ import javax.crypto.SecretKey;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 public class UserFriendRequestController {
 
@@ -50,8 +49,6 @@ public class UserFriendRequestController {
                 PublicKey publicKeyOther = database.selectUserKey(user.getUserId());
 
                 SecretKey secretKey = DHUtil.generateSharedSecret(privateKey, publicKeyOther);
-
-                System.out.println("SecretKey2: " + DHUtil.keyToString(secretKey));
 
                 if (database.updateUserPrivateKey(user.getUserId(), DHUtil.keyToString(secretKey))) {
                     MessageType messageType = MessageType.REGUEST_FRIEND_CLIENT_SUCCESS;

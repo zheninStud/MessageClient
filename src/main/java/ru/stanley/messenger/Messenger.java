@@ -2,6 +2,7 @@ package ru.stanley.messenger;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import ru.stanley.messenger.Database.DatabaseConnection;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Models.User;
@@ -20,7 +21,7 @@ public class Messenger extends Application {
 
     @Override
     public void start(Stage stage) {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        Security.addProvider(new BouncyCastleProvider());
         instance = this;
 
         FontLoader.loadFonts();
@@ -36,7 +37,7 @@ public class Messenger extends Application {
         super.stop();
     }
 
-    public void openDatabaseConnection() {
+    public static void openDatabaseConnection() {
 
         try {
             databaseConnection = new DatabaseConnection();

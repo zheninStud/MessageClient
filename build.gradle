@@ -4,6 +4,7 @@ plugins {
   id 'org.javamodularity.moduleplugin' version '1.8.15'
   id 'org.openjfx.javafxplugin' version '0.1.0'
   id 'org.beryx.jlink' version '3.0.1'
+  id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 group 'ru.stanley'
@@ -28,7 +29,7 @@ javafx {
 }
 
 dependencies {
-  implementation('org.xerial:sqlite-jdbc:3.45.3.0')
+  implementation('org.xerial:sqlite-jdbc:3.36.0.1')
   implementation('org.json:json:20240303')
   implementation('org.bouncycastle:bcprov-jdk18on:1.78.1')
 }
@@ -43,4 +44,10 @@ jlink {
 
 jlinkZip {
   group = 'distribution'
+}
+
+jar {
+  manifest {
+    attributes 'Main-Class': 'ru.stanley.messenger.Messenger'
+  }
 }

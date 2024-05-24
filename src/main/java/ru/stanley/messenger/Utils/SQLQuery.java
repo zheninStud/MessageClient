@@ -24,8 +24,8 @@ public enum SQLQuery {
     CREATE_TABLE_MESSAGE(
             "CREATE TABLE IF NOT EXISTS Message (" +
                     "messageId INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "chatId INT," +
-                    "senderId INT," +
+                    "senderId TEXT," +
+                    "receiverId TEXT," +
                     "content TEXT," +
                     "timestamp DATE," +
                     "FOREIGN KEY (chatId) REFERENCES Chat(chatId)," +
@@ -51,6 +51,7 @@ public enum SQLQuery {
                     "publicKey TEXT," +
                     "is_request INT," +
                     "is_client_taken INT," +
+                    "is_success_server INT," +
                     "FOREIGN KEY (UserId) REFERENCES User(id)" +
                     ")"
     ),
@@ -91,6 +92,10 @@ public enum SQLQuery {
             "UPDATE UserKeys SET is_client_taken = ? WHERE userId = ?"
     ),
 
+    INSERT_USERKEY_IS_SUCCESS_SERVER(
+            "UPDATE UserKeys SET is_success_server = ? WHERE userId = ?"
+    ),
+
     SELECT_USERKEY(
             "SELECT * FROM UserKeys WHERE userId = ?"
     ),
@@ -103,35 +108,39 @@ public enum SQLQuery {
             "SELECT * FROM User WHERE userId = ?"
     ),
 
-    SELECT_CHAT(
-            "SELECT * FROM Chat WHERE chatId = ?"
-    ),
-
-    SELECT_CHAT_USERS(
-            "SELECT User.* " +
-                    "FROM User " +
-                    "JOIN ChatUser ON User.userId = ChatUser.userId " +
-                    "WHERE ChatUser.chatId = ?"
-    ),
-
-    SELECT_CHAT_MESSAGES(
-            "SELECT Message.* " +
-                    "FROM Message " +
-                    "JOIN Chat ON Message.chatId = Chat.chatId " +
-                    "WHERE Chat.chatId = ?"
-    ),
-
-    DELETE_CHAT_USER(
-            "DELETE FROM ChatUser WHERE chatId = ? AND userId = ?"
-    ),
-
-    DELETE_CHAT_USERS(
-            "DELETE FROM ChatUser WHERE chatId = ?"
-    ),
-
-    DELETE_CHAT(
-            "DELETE FROM Chat WHERE chatId = ?"
+    SELECT_MESSAGE_ALL(
+            "SELECT * FROM Message WHERE (senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?)"
     );
+
+//    SELECT_CHAT(
+//            "SELECT * FROM Chat WHERE chatId = ?"
+//    ),
+//
+//    SELECT_CHAT_USERS(
+//            "SELECT User.* " +
+//                    "FROM User " +
+//                    "JOIN ChatUser ON User.userId = ChatUser.userId " +
+//                    "WHERE ChatUser.chatId = ?"
+//    ),
+//
+//    SELECT_CHAT_MESSAGES(
+//            "SELECT Message.* " +
+//                    "FROM Message " +
+//                    "JOIN Chat ON Message.chatId = Chat.chatId " +
+//                    "WHERE Chat.chatId = ?"
+//    ),
+//
+//    DELETE_CHAT_USER(
+//            "DELETE FROM ChatUser WHERE chatId = ? AND userId = ?"
+//    ),
+//
+//    DELETE_CHAT_USERS(
+//            "DELETE FROM ChatUser WHERE chatId = ?"
+//    ),
+//
+//    DELETE_CHAT(
+//            "DELETE FROM Chat WHERE chatId = ?"
+//    );
 
     private final String mysql;
 
