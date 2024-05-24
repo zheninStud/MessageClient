@@ -9,16 +9,17 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import org.json.JSONObject;
 import ru.stanley.messenger.Database.DatabaseConnection;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.Message;
 import ru.stanley.messenger.Models.User;
-import ru.stanley.messenger.Utils.ControllerRegistry;
-import ru.stanley.messenger.Utils.GOSTEncryptor;
-import ru.stanley.messenger.Utils.WindowsOpener;
+import ru.stanley.messenger.Models.UserMessage;
+import ru.stanley.messenger.Utils.*;
 
 import java.sql.SQLException;
+import java.util.List;
 
 
 public class MainController {
@@ -48,6 +49,7 @@ public class MainController {
     public Button buttonUpdate;
 
     private static final User currentUser = Messenger.getAccountUser();
+    private static User selectUser;
     private static final ClientConnectionHandler clientConnectionHandler = Messenger.getClientConnectionHandler();
     private static final DatabaseConnection database = Messenger.getDatabaseConnection();
     private static GOSTEncryptor gostEncryptor;
@@ -57,29 +59,13 @@ public class MainController {
 
         loadUser();
 
-
-        //chatList.getItems().addAll("Chat 1", "Chat 2", "Chat 3");
-
-//        addMessage("Это тестовое сообщение 1", true);
-//        addMessage("Это тестовое сообщение 2", false);
-//        addMessage("Это тестовое сообщение 3", true);
-//        addMessage("Это тестовое сообщение 4", true);
-//        addMessage("Это тестовое сообщение 5", false);
-
-
-//        sendMessage("You", "Это тестовое сообщение 1 Это тестовое сообщение 1Это тестовое сообщение 1 Это тестовое сообщение 1 Это тестовое сообщение 1Это тестовое сообщение 1 Это тестовое сообщение 1 Это тестовое сообщение 1");
-//        sendMessage("Sol", "Это тестовое сообщение 2");
-//        sendMessage("You", "Это тестовое сообщение 3");
-//        sendMessage("You", "Это тестовое сообщение 4");
-//        sendMessage("Sol", "Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5 Это тестовое сообщение 5");
-
         chatList.setOnMouseClicked(event -> {
             User selectedUser = chatList.getSelectionModel().getSelectedItem();
             if (selectedUser != null) {
 
                 try {
                     openChat(selectedUser);
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -94,7 +80,11 @@ public class MainController {
         });
 
         buttonSend.setOnAction(actionEvent -> {
-            sendMessage(currentUser, messageField.getText());
+            try {
+                sendMessage(currentUser, selectUser, messageField.getText());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
 
         buttonSearchUser.setOnAction(actionEvent -> {
@@ -106,7 +96,8 @@ public class MainController {
         chatList.setItems(database.selectAllUser());
     }
 
-    private void openChat(User selectedUser) throws SQLException {
+    private void openChat(User selectedUser) throws Exception {
+        selectUser = selectedUser;
         if (selectedUser.getPrivateKey() == null) {
             if (database.selectUserKeyAll(selectedUser.getUserId())) {
                 WindowsOpener.openWindow("userFriendRequest.fxml");
@@ -117,7 +108,13 @@ public class MainController {
             }
         } else {
             gostEncryptor = new GOSTEncryptor(selectedUser.getPrivateKey());
-            database.selectMessageAll(currentUser.getUserId(), selectedUser.getUserId());
+            List<UserMessage> userMessageList = database.selectMessageAll(currentUser.getUserId(), selectedUser.getUserId());
+            if (userMessageList != null) {
+                for (UserMessage userMessage : userMessageList) {
+                    String decodeText = gostEncryptor.decrypt(userMessage.getContent());
+                    addMessage(userMessage.getSender(), decodeText);
+                }
+            }
         }
     }
 
@@ -126,28 +123,74 @@ public class MainController {
         chatList.setItems(database.selectAllUser());
     }
 
-    private void sendMessage(User user, String text) {
+    private void sendMessage(User user, User receiverUser, String text) throws Exception {
         if (!text.isEmpty()) {
-//            String sender = currentUser;
-            addMessage(user.getUserName(), text);
+            HBox messageBox = new HBox();
+            HBox messageContent = gethBox(user.getUserName(), text);
+
+            messageBox.getChildren().add(messageContent);
+
+            if (user.getUserName().equals(currentUser.getUserName())) {
+                messageBox.setAlignment(Pos.CENTER_RIGHT);
+            } else {
+                messageBox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            messageHistory.getChildren().add(messageBox);
+
+            gostEncryptor = new GOSTEncryptor(receiverUser.getPrivateKey());
+            String encodeText = gostEncryptor.encrypt(text);
+
+            database.insertMessage(user.getUserId(), receiverUser.getUserId(), encodeText);
+
+            MessageType messageTypeSend = MessageType.MESSAGE_SENT;
+            JSONObject jsonMessage = messageTypeSend.createJsonObject();
+
+            jsonMessage.getJSONObject("data").put("sender", user.getUserId());
+            jsonMessage.getJSONObject("data").put("recipient", receiverUser.getUserId());
+            jsonMessage.getJSONObject("data").put("messsage", encodeText);
+
+            clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
         }
     }
 
-    public void addMessage(String sender, String text) {
-
+    private void addMessage(User sender, String text) {
         HBox messageBox = new HBox();
-        HBox messageContent = gethBox(sender, text);
+        HBox messageContent = gethBox(sender.getUserName(), text);
 
         messageBox.getChildren().add(messageContent);
 
-        if (sender.equals(currentUser.getUserName())) {
+        if (sender.getUserName().equals(currentUser.getUserName())) {
             messageBox.setAlignment(Pos.CENTER_RIGHT);
         } else {
             messageBox.setAlignment(Pos.CENTER_LEFT);
         }
 
         messageHistory.getChildren().add(messageBox);
-        clientConnectionHandler.sendMessage(Message.fromJSON(text));
+    }
+
+    public void newMessage(User sender, User receiver, String text) throws Exception {
+        if (sender.getUserName().equals(selectUser.getUserName())) {
+            database.insertMessage(sender.getUserId(), receiver.getUserId(), text);
+
+            gostEncryptor = new GOSTEncryptor(selectUser.getPrivateKey());
+            String decodeText = gostEncryptor.decrypt(text);
+
+            HBox messageBox = new HBox();
+            HBox messageContent = gethBox(sender.getUserName(), decodeText);
+
+            messageBox.getChildren().add(messageContent);
+
+            if (sender.getUserName().equals(currentUser.getUserName())) {
+                messageBox.setAlignment(Pos.CENTER_RIGHT);
+            } else {
+                messageBox.setAlignment(Pos.CENTER_LEFT);
+            }
+
+            messageHistory.getChildren().add(messageBox);
+        } else {
+            database.insertMessage(sender.getUserId(), receiver.getUserId(), text);
+        }
     }
 
     public void showAlert(String message) {

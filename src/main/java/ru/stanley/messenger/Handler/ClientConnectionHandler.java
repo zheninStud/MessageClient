@@ -104,7 +104,13 @@ public class ClientConnectionHandler {
 
                 authController = (AuthController) ControllerRegistry.getController("AuthController");
                 if (authController != null) {
-                    Platform.runLater(() -> authController.openMainForm(currentUser));
+                    Platform.runLater(() -> {
+                        try {
+                            authController.openMainForm(currentUser);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
                 }
                 break;
             case "AUTH_FAIL":
@@ -215,6 +221,30 @@ public class ClientConnectionHandler {
                     }
                 }
                 break;
+            case "MESSAGE_SENT_CLIENT":
+                String userIdSender = message.getData().getString("sender");
+                String userIdReceiver = message.getData().getString("recipient");
+                String text = message.getData().getString("message");
+
+                User userSender = database.selectUserUserId(userIdSender);
+                User userReceiver = database.selectUserUserId(userIdReceiver);
+
+                mainController = (MainController) ControllerRegistry.getController("MainController");
+                if (mainController != null) {
+                    Platform.runLater(() -> {
+                        try {
+                            mainController.newMessage(userSender, userReceiver, text);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                }
+                break;
+            case "MESSAGE_SENT_SERVER":
+                mainController = (MainController) ControllerRegistry.getController("MainController");
+                if (mainController != null) {
+                    Platform.runLater(() -> mainController.showSuccessNotification("Message taken for server"));
+                }
         }
     }
 }

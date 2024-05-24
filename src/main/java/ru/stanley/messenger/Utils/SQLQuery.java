@@ -73,7 +73,7 @@ public enum SQLQuery {
     ),
 
     INSERT_MESSAGE(
-            "INSERT INTO 'Message' (chatId, senderId, content, timestamp) VALUES (?, ?, ?, ?)"
+            "INSERT INTO 'Message' (senderId, receiverId, content, timestamp) VALUES (?, ?, ?, ?)"
     ),
 
     INSERT_USER_ADD_CHAT(

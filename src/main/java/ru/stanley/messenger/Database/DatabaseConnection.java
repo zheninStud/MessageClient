@@ -8,21 +8,25 @@ import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.UserMessage;
 import ru.stanley.messenger.Utils.ControllerRegistry;
 import ru.stanley.messenger.Utils.DHUtil;
+import ru.stanley.messenger.Utils.GOSTEncryptor;
 import ru.stanley.messenger.Utils.SQLQuery;
 
 import javax.crypto.SecretKey;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
+
 import ru.stanley.messenger.Models.User;
 
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.sql.Timestamp;
+import java.util.Date;
 
 public class DatabaseConnection {
 
@@ -222,10 +226,14 @@ public class DatabaseConnection {
         return factory.createCachedRowSet();
     }
 
-    public boolean insertUser(User user) {
-        int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone());
+    public boolean insertUser(User user) throws SQLException {
+        if (selectUserUserId(user.getUserId()) == null) {
+            int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone());
 
-        return result > 0;
+            return result > 0;
+        } else {
+            return true;
+        }
     }
 
     public boolean insertUserKey(String userId, String publicKey, String privateKey) {
@@ -351,17 +359,52 @@ public class DatabaseConnection {
         return false;
     }
 
+    public User selectUserUserId(String userId) throws SQLException {
+        ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_USER, userId);
+
+        if (resultSet.next()) {
+            String userIdResult = resultSet.getString("userId");
+            String userName = resultSet.getString("userName");
+            String email = resultSet.getString("email");
+            String phone = resultSet.getString("phone");
+            String privateKey = resultSet.getString("privateKey");
+
+            User user = new User(userIdResult, userName, email, phone);
+            user.setPrivateKey(privateKey);
+            return user;
+        }
+
+        return null;
+
+    }
+
     public List<UserMessage> selectMessageAll(String userIdSender, String userIdReceiver) throws SQLException {
+        List<UserMessage> userMessageList = new ArrayList<>();
+
         ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_MESSAGE_ALL, userIdSender, userIdReceiver, userIdReceiver, userIdSender);
 
         if (resultSet.next()) {
             String senderId  = resultSet.getString("senderId");
             String receiverId = resultSet.getString("receiverId");
             String content = resultSet.getString("content");
+            Timestamp timestamp = resultSet.getTimestamp("timestamp");
 
+            User userSender = selectUserUserId(senderId);
+            User userReceiver = selectUserUserId(receiverId);
 
+            userMessageList.add(new UserMessage(userSender, userReceiver, content, timestamp));
+            return userMessageList;
         }
 
-        return new ArrayList<>();
+        return null;
+    }
+
+    public boolean insertMessage(String userSender, String userReceiver, String content) {
+        Date currentDate = new Date();
+        Timestamp timestamp = new Timestamp(currentDate.getTime());
+
+        int result = executeUpdateStatement(SQLQuery.INSERT_MESSAGE, userSender, userReceiver, content, timestamp);
+
+        return result > 0;
     }
 }

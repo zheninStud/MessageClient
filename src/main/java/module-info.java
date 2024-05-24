@@ -6,6 +6,7 @@ module ru.stanley.messenger {
     requires org.json;
     requires org.bouncycastle.provider;
     requires java.desktop;
+    requires java.xml.crypto;
 
 
     opens ru.stanley.messenger to javafx.fxml;
