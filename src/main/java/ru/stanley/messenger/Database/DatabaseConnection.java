@@ -20,6 +20,7 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.*;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -360,5 +361,7 @@ public class DatabaseConnection {
 
 
         }
+
+        return new ArrayList<>();
     }
 }
