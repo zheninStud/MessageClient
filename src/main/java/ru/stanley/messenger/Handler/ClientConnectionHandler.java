@@ -60,6 +60,7 @@ public class ClientConnectionHandler {
 
     public void disconnect() {
         try {
+            sendMessage(new Message(MessageType.DISCONNECT.createJsonObject()));
             running = false;
             receiveThread.join();
             if (socket != null && !socket.isClosed()) {
@@ -147,7 +148,7 @@ public class ClientConnectionHandler {
             case "USER_SUCCESS":
                 newUser = new User(message.getData().getString("userId"), message.getData().getString("userName"),
                         message.getData().getString("email"), message.getData().getString("phone"));
-                if (database.insertUser(newUser)) {
+                if (database.insertUser(newUser, 0)) {
                     mainController = (MainController) ControllerRegistry.getController("MainController");
                     if (mainController != null) {
                         Platform.runLater(() -> mainController.showSuccessNotification("User successfully added"));
@@ -155,6 +156,8 @@ public class ClientConnectionHandler {
                         KeyPair dhUtil = DHUtil.initDH();
                         PublicKey publicKey = dhUtil.getPublic();
                         PrivateKey privateKey = dhUtil.getPrivate();
+
+                        System.out.println("PublicKey: " + DHUtil.keyToString(publicKey) + "\nPrivateKey: " + DHUtil.keyToString(privateKey));
 
                         if (database.insertUserKey(newUser.getUserId(), DHUtil.keyToString(publicKey), DHUtil.keyToString(privateKey))) {
                             MessageType messageTypeSend = MessageType.REGUEST_FRIEND;
@@ -188,6 +191,10 @@ public class ClientConnectionHandler {
                         sendMessage(messageTypeSend.createMessage(jsonMessage));
                     }
                 }
+                break;
+            case "REGUEST_FRIEND_SERVER":
+                String userId = message.getData().getString("userId");
+                database.updateUserKeyRequest(userId);
                 break;
             case "REGUEST_FRIEND_CLIENT_TAKEN_CLIENT":
                 String userReguestTaken = message.getData().getString("userId");
@@ -245,6 +252,9 @@ public class ClientConnectionHandler {
                 if (mainController != null) {
                     Platform.runLater(() -> mainController.showSuccessNotification("Message taken for server"));
                 }
+                break;
+            case "REGUEST_FRIEND_CLIENT_DENY_CLIENT":
+                break;
         }
     }
 }

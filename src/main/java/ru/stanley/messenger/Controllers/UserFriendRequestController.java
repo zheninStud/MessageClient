@@ -67,6 +67,7 @@ public class UserFriendRequestController {
                 if (mainController != null) {
                     Platform.runLater(() -> {
                         try {
+                            mainController.setPrivateKey(DHUtil.keyToString(secretKey));
                             mainController.reloadUser();
                         } catch (SQLException e) {
                             throw new RuntimeException(e);
@@ -87,6 +88,8 @@ public class UserFriendRequestController {
         denyButton.setOnAction(event -> {
 
             if (database.deleteUserKey(user.getUserId())) {
+
+                database.deleteUser(user.getUserId());
 
                 MessageType messageType = MessageType.REGUEST_FRIEND_CLIENT_DENY;
                 JSONObject jsonMessage = messageType.createJsonObject();

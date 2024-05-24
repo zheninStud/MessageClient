@@ -2,6 +2,7 @@ package ru.stanley.messenger.Controllers;
 
 
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,7 +14,6 @@ import org.json.JSONObject;
 import ru.stanley.messenger.Database.DatabaseConnection;
 import ru.stanley.messenger.Handler.ClientConnectionHandler;
 import ru.stanley.messenger.Messenger;
-import ru.stanley.messenger.Models.Message;
 import ru.stanley.messenger.Models.User;
 import ru.stanley.messenger.Models.UserMessage;
 import ru.stanley.messenger.Utils.*;
@@ -34,12 +34,6 @@ public class MainController {
     private VBox messageHistory;
 
     @FXML
-    private ScrollPane scrollPane;
-
-    @FXML
-    private SplitPane splitPane;
-
-    @FXML
     private Button buttonSend;
 
     @FXML
@@ -58,12 +52,14 @@ public class MainController {
     void initialize() throws SQLException {
 
         loadUser();
+        checkMessage();
 
         chatList.setOnMouseClicked(event -> {
             User selectedUser = chatList.getSelectionModel().getSelectedItem();
             if (selectedUser != null) {
 
                 try {
+                    messageHistory.getChildren().clear();
                     openChat(selectedUser);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -82,6 +78,7 @@ public class MainController {
         buttonSend.setOnAction(actionEvent -> {
             try {
                 sendMessage(currentUser, selectUser, messageField.getText());
+                messageField.setText("");
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -92,13 +89,25 @@ public class MainController {
         });
     }
 
+    private void checkMessage() {
+        MessageType messageTypeSend = MessageType.CHECK_MESSAGE;
+        JSONObject jsonMessage = messageTypeSend.createJsonObject();
+
+        jsonMessage.getJSONObject("data").put("userId", currentUser.getUserId());
+
+        clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
+    }
+
     private void loadUser() throws SQLException {
-        chatList.setItems(database.selectAllUser());
+        ObservableList<User> userList = database.selectAllUser();
+        if (userList != null) {
+            chatList.setItems(userList);
+        }
     }
 
     private void openChat(User selectedUser) throws Exception {
         selectUser = selectedUser;
-        if (selectedUser.getPrivateKey() == null) {
+        if (selectedUser.checkPrivateKey()) {
             if (database.selectUserKeyAll(selectedUser.getUserId())) {
                 WindowsOpener.openWindow("userFriendRequest.fxml");
                 UserFriendRequestController userFriendRequestController = (UserFriendRequestController) ControllerRegistry.getController("UserFriendRequestController");
@@ -120,7 +129,10 @@ public class MainController {
 
     public void reloadUser() throws SQLException {
         chatList.getItems().clear();
-        chatList.setItems(database.selectAllUser());
+        ObservableList<User> userList = database.selectAllUser();
+        if (userList != null) {
+            chatList.setItems(userList);
+        }
     }
 
     private void sendMessage(User user, User receiverUser, String text) throws Exception {
@@ -148,7 +160,7 @@ public class MainController {
 
             jsonMessage.getJSONObject("data").put("sender", user.getUserId());
             jsonMessage.getJSONObject("data").put("recipient", receiverUser.getUserId());
-            jsonMessage.getJSONObject("data").put("messsage", encodeText);
+            jsonMessage.getJSONObject("data").put("message", encodeText);
 
             clientConnectionHandler.sendMessage(messageTypeSend.createMessage(jsonMessage));
         }
@@ -170,24 +182,28 @@ public class MainController {
     }
 
     public void newMessage(User sender, User receiver, String text) throws Exception {
-        if (sender.getUserName().equals(selectUser.getUserName())) {
-            database.insertMessage(sender.getUserId(), receiver.getUserId(), text);
+        if (selectUser != null) {
+            if (sender.getUserName().equals(selectUser.getUserName())) {
+                database.insertMessage(sender.getUserId(), receiver.getUserId(), text);
 
-            gostEncryptor = new GOSTEncryptor(selectUser.getPrivateKey());
-            String decodeText = gostEncryptor.decrypt(text);
+                gostEncryptor = new GOSTEncryptor(selectUser.getPrivateKey());
+                String decodeText = gostEncryptor.decrypt(text);
 
-            HBox messageBox = new HBox();
-            HBox messageContent = gethBox(sender.getUserName(), decodeText);
+                HBox messageBox = new HBox();
+                HBox messageContent = gethBox(sender.getUserName(), decodeText);
 
-            messageBox.getChildren().add(messageContent);
+                messageBox.getChildren().add(messageContent);
 
-            if (sender.getUserName().equals(currentUser.getUserName())) {
-                messageBox.setAlignment(Pos.CENTER_RIGHT);
+                if (sender.getUserName().equals(currentUser.getUserName())) {
+                    messageBox.setAlignment(Pos.CENTER_RIGHT);
+                } else {
+                    messageBox.setAlignment(Pos.CENTER_LEFT);
+                }
+
+                messageHistory.getChildren().add(messageBox);
             } else {
-                messageBox.setAlignment(Pos.CENTER_LEFT);
+                database.insertMessage(sender.getUserId(), receiver.getUserId(), text);
             }
-
-            messageHistory.getChildren().add(messageBox);
         } else {
             database.insertMessage(sender.getUserId(), receiver.getUserId(), text);
         }
@@ -207,6 +223,14 @@ public class MainController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    public void setPrivateKey(String privateKey) {
+        if (selectUser != null) {
+            if (selectUser.checkPrivateKey()) {
+                selectUser.setPrivateKey(privateKey);
+            }
+        }
     }
 
     private HBox gethBox(String sender, String text) {

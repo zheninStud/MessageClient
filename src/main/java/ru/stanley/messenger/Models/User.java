@@ -50,9 +50,12 @@ public class User {
         this.phone = phone;
     }
 
-    public SecretKey getPrivateKey() {
-        return DHUtil.convertStringToSecretKey(privateKey);
-    }
+    public SecretKey getPrivateKey() { return DHUtil.convertStringToSecretKey(privateKey); }
+
+    public boolean checkPrivateKey() { return privateKey == null; }
 
     public void setPrivateKey(String privateKey) { this.privateKey = privateKey; }
+
+    @Override
+    public String toString() { return userName; }
 }

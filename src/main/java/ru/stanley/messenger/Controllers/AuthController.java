@@ -75,7 +75,7 @@ public class AuthController {
         Messenger.openDatabaseConnection();
         Messenger.setAccountUser(user);
         DatabaseConnection database = Messenger.getDatabaseConnection();
-        database.insertUser(user);
+        database.insertUser(user, 1);
         WindowsOpener.openAndCloseWindows("main.fxml", (Stage) buttonAuth.getScene().getWindow());
     }
 

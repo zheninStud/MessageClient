@@ -9,7 +9,8 @@ public enum SQLQuery {
                     "userName TEXT," +
                     "email TEXT," +
                     "phone TEXT," +
-                    "privateKey TEXT" +
+                    "privateKey TEXT," +
+                    "is_main INT" +
                     ")"
     ),
 
@@ -28,7 +29,6 @@ public enum SQLQuery {
                     "receiverId TEXT," +
                     "content TEXT," +
                     "timestamp DATE," +
-                    "FOREIGN KEY (chatId) REFERENCES Chat(chatId)," +
                     "FOREIGN KEY (senderId) REFERENCES User(id)" +
                     ")"
     ),
@@ -60,8 +60,12 @@ public enum SQLQuery {
             "DELETE FROM UserKeys WHERE userId = ?"
     ),
 
+    DELETE_USER(
+            "DELETE FROM User WHERE userId = ?"
+    ),
+
     INSERT_USER(
-            "INSERT INTO 'User' (userId, userName, email, phone) VALUES (?, ?, ?, ?)"
+            "INSERT INTO 'User' (userId, userName, email, phone, is_main) VALUES (?, ?, ?, ?, ?)"
     ),
 
     UPDATE_USER_PRIVATE_KEY(
@@ -82,6 +86,10 @@ public enum SQLQuery {
 
     INSERT_USERKEY(
             "INSERT INTO 'UserKeys' (userId, privateKey, publicKey) VALUES (?, ?, ?)"
+    ),
+
+    UPDATE_USERKEY_REQUEST(
+            "UPDATE UserKeys SET is_request = ? WHERE userId = ?"
     ),
 
     INSERT_USERKEY_REQUEST(

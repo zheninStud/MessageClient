@@ -8,11 +8,10 @@ public class UserMessage {
     private String content;
     private Date timestamp;
 
-    public UserMessage(User sender, User receiver, String content, Date timestamp) {
+    public UserMessage(User sender, User receiver, String content) {
         this.sender = sender;
         this.receiver = receiver;
         this.content = content;
-        this.timestamp = timestamp;
     }
 
     public User getSender() {

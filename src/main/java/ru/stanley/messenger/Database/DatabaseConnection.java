@@ -8,7 +8,6 @@ import ru.stanley.messenger.Messenger;
 import ru.stanley.messenger.Models.UserMessage;
 import ru.stanley.messenger.Utils.ControllerRegistry;
 import ru.stanley.messenger.Utils.DHUtil;
-import ru.stanley.messenger.Utils.GOSTEncryptor;
 import ru.stanley.messenger.Utils.SQLQuery;
 
 import javax.crypto.SecretKey;
@@ -25,7 +24,6 @@ import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Timestamp;
 import java.util.Date;
 
 public class DatabaseConnection {
@@ -226,9 +224,9 @@ public class DatabaseConnection {
         return factory.createCachedRowSet();
     }
 
-    public boolean insertUser(User user) throws SQLException {
+    public boolean insertUser(User user, Integer is_main) throws SQLException {
         if (selectUserUserId(user.getUserId()) == null) {
-            int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone());
+            int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone(), is_main);
 
             return result > 0;
         } else {
@@ -243,16 +241,22 @@ public class DatabaseConnection {
     }
 
     public boolean insertUserRequest(User user) {
-        int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone());
+        int result = executeUpdateStatement(SQLQuery.INSERT_USER, user.getUserId(), user.getUserName(), user.getEmail(), user.getPhone(), 0);
 
         return result > 0;
     }
 
     public boolean insertUserKeyRequest(String userId, String publicKey) {
-        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY_REQUEST, userId, publicKey, 1);
+        int result = executeUpdateStatement(SQLQuery.INSERT_USERKEY_REQUEST, userId, publicKey, 0);
 
         return result > 0;
 
+    }
+
+    public boolean updateUserKeyRequest(String userId) {
+        int result = executeUpdateStatement(SQLQuery.UPDATE_USERKEY_REQUEST, 1, userId);
+
+        return result > 0;
     }
 
     public boolean updateUserKey(String userId) {
@@ -277,16 +281,19 @@ public class DatabaseConnection {
         ObservableList<User> userList = FXCollections.observableArrayList();
         ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_ALL_USER);
 
-        if (resultSet.next()) {
-            String userId = String.valueOf(resultSet.getString("userId"));
+        while (resultSet.next()) {
+            String userId = resultSet.getString("userId");
             String userName = resultSet.getString("userName");
             String email = resultSet.getString("email");
             String phone = resultSet.getString("phone");
             String privateKey = resultSet.getString("privateKey");
+            int is_main = resultSet.getInt("is_main");
 
-            User user = new User(userId, userName, email, phone);
-            user.setPrivateKey(privateKey);
-            userList.add(user);
+            if (is_main == 0) {
+                User user = new User(userId, userName, email, phone);
+                user.setPrivateKey(privateKey);
+                userList.add(user);
+            }
         }
 
         return userList;
@@ -353,6 +360,11 @@ public class DatabaseConnection {
             updateUserPrivateKey(userId, DHUtil.keyToString(secretKey));
             deleteUserKey(userId);
 
+            mainController = (MainController) ControllerRegistry.getController("MainController");
+            if (mainController != null) {
+                Platform.runLater(() -> mainController.setPrivateKey(DHUtil.keyToString(secretKey)) );
+            }
+
             return true;
         }
 
@@ -383,20 +395,18 @@ public class DatabaseConnection {
 
         ResultSet resultSet = executeResultStatement(SQLQuery.SELECT_MESSAGE_ALL, userIdSender, userIdReceiver, userIdReceiver, userIdSender);
 
-        if (resultSet.next()) {
+        while (resultSet.next()) {
             String senderId  = resultSet.getString("senderId");
             String receiverId = resultSet.getString("receiverId");
             String content = resultSet.getString("content");
-            Timestamp timestamp = resultSet.getTimestamp("timestamp");
 
             User userSender = selectUserUserId(senderId);
             User userReceiver = selectUserUserId(receiverId);
 
-            userMessageList.add(new UserMessage(userSender, userReceiver, content, timestamp));
-            return userMessageList;
+            userMessageList.add(new UserMessage(userSender, userReceiver, content));
         }
 
-        return null;
+        return userMessageList;
     }
 
     public boolean insertMessage(String userSender, String userReceiver, String content) {
@@ -404,6 +414,12 @@ public class DatabaseConnection {
         Timestamp timestamp = new Timestamp(currentDate.getTime());
 
         int result = executeUpdateStatement(SQLQuery.INSERT_MESSAGE, userSender, userReceiver, content, timestamp);
+
+        return result > 0;
+    }
+
+    public boolean deleteUser(String userId) {
+        int result = executeUpdateStatement(SQLQuery.DELETE_USER_KEY, userId);
 
         return result > 0;
     }

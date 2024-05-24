@@ -2,6 +2,8 @@ package ru.stanley.messenger.Utils;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
+import javax.crypto.interfaces.DHPrivateKey;
+import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -22,7 +24,11 @@ public class DHUtil {
         keyAgreement.init(privateKey);
         keyAgreement.doPhase(otherClientPublicKey, true);
         byte[] sharedSecretBytes = keyAgreement.generateSecret();
-        return new SecretKeySpec(sharedSecretBytes, "GOST3412_2015");
+
+        byte[] keyBytes = new byte[32];
+        System.arraycopy(sharedSecretBytes, 0, keyBytes, 0, Math.min(sharedSecretBytes.length, keyBytes.length));
+
+        return new SecretKeySpec(keyBytes, "GOST3412_2015");
     }
 
     public static PublicKey convertBytesToPublicKey(String key) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
@@ -44,7 +50,7 @@ public class DHUtil {
         return new SecretKeySpec(keyBytes, "GOST3412_2015");
     }
 
-    public static String keyToString(java.security.Key key) {
+    public static String keyToString(Key key) {
         return Base64.getEncoder().encodeToString(key.getEncoded());
     }
 
