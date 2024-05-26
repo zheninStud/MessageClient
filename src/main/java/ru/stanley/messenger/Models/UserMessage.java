@@ -1,12 +1,9 @@
 package ru.stanley.messenger.Models;
 
-import java.util.Date;
-
 public class UserMessage {
     private User sender;
     private User receiver;
     private String content;
-    private Date timestamp;
 
     public UserMessage(User sender, User receiver, String content) {
         this.sender = sender;
@@ -32,13 +29,5 @@ public class UserMessage {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
     }
 }

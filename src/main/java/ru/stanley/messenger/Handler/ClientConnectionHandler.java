@@ -157,8 +157,6 @@ public class ClientConnectionHandler {
                         PublicKey publicKey = dhUtil.getPublic();
                         PrivateKey privateKey = dhUtil.getPrivate();
 
-                        System.out.println("PublicKey: " + DHUtil.keyToString(publicKey) + "\nPrivateKey: " + DHUtil.keyToString(privateKey));
-
                         if (database.insertUserKey(newUser.getUserId(), DHUtil.keyToString(publicKey), DHUtil.keyToString(privateKey))) {
                             MessageType messageTypeSend = MessageType.REGUEST_FRIEND;
                             JSONObject jsonMessage = messageTypeSend.createJsonObject();
