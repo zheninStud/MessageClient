@@ -76,8 +76,13 @@ public class MainController {
 
         buttonSend.setOnAction(actionEvent -> {
             try {
-                sendMessage(currentUser, selectUser, messageField.getText());
-                messageField.setText("");
+                if (selectUser != null) {
+                    sendMessage(currentUser, selectUser, messageField.getText());
+                    messageField.setText("");
+                } else {
+                    messageField.setText("");
+                    showAlert("Для начала выберите пользователя");
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

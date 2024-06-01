@@ -1,6 +1,7 @@
 package ru.stanley.messenger.Controllers;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -25,6 +26,10 @@ public class UserSearchController {
 
         searchButton.setOnAction(event -> {
 
+            if (searchField.getText().isEmpty()) {
+                showAlert("Поле поиска не заполнено");
+            }
+
             MessageType messageType = MessageType.GET_USER;
             JSONObject jsonMessage = messageType.createJsonObject();
 
@@ -36,6 +41,14 @@ public class UserSearchController {
 
         });
 
+    }
+
+    public void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
 }

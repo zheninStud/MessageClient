@@ -252,7 +252,20 @@ public class ClientConnectionHandler {
                 }
                 break;
             case "REGUEST_FRIEND_CLIENT_DENY_CLIENT":
-                break;
+                String userIdDeny = message.getData().getString("userId");
+
+                User userDeny = database.selectUserUserId(userIdDeny);
+
+                if (userDeny != null) {
+                    mainController = (MainController) ControllerRegistry.getController("MainController");
+                    if (mainController != null) {
+                        Platform.runLater(() -> mainController.showAlert("User " + userDeny.getUserName() + " friend request denied"));
+                    }
+
+                    database.deleteUserKey(userDeny.getUserId());
+                    database.deleteUserKey(userDeny.getUserId());
+                    break;
+                }
         }
     }
 }

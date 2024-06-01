@@ -25,7 +25,7 @@ public class Messenger extends Application {
         instance = this;
 
         FontLoader.loadFonts();
-        clientConnectionHandler.connect("localhost", 12345);
+        clientConnectionHandler.connect("158.160.51.7", 12345);
         WindowsOpener.openWindow("auth.fxml");
 
     }
